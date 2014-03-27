@@ -1,60 +1,63 @@
 /*
-    FreeRTOS V6.1.1 - Copyright (C) 2011 Real Time Engineers Ltd.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
-    ***NOTE*** The exception to the GPL is included to allow you to distribute
-    a combined work that includes FreeRTOS without being obliged to provide the
-    source code for proprietary components outside of the FreeRTOS kernel.
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT
-    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-    more details. You should have received a copy of the GNU General Public 
-    License and the FreeRTOS license exception along with FreeRTOS; if not it 
-    can be viewed here: http://www.freertos.org/a00114.html and also obtained 
-    by writing to Richard Barry, contact details for whom are available on the
-    FreeRTOS WEB site.
-
-    1 tab == 4 spaces!
-
-    http://www.FreeRTOS.org - Documentation, latest information, license and
-    contact details.
-
-    http://www.SafeRTOS.com - A version that is certified for use in safety
-    critical systems.
-
-    http://www.OpenRTOS.com - Commercial support, development, porting,
-    licensing and training services.
+ * SEIS-740, Spring 2014, Real-Time-Systems
+ * Class Project
+ * Chris Belsky & Jeff Hatch *
 */
 
-/* FreeRTOS.org includes. */
+// FreeRTOS.org includes.
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
+// FreeRTOS Demo includes.
+#include "basic_io.h"
 
+// Project Includes
+#include "system_LPC17xx.h"
+#include "LPC17xx.h"			/* LPC17xx Peripheral Registers */
 #include "irSensors.h"
 #include "display.h"
 #include "timer.h"
+#include "EINT_Setup.h"
+#include "ssp.h"
+#include "ADXL345_init.h"
+#include "ADXL345.h"
+#include "externs.h"
+#include "uart.h"
+#include "vTasks.h"
+#include "leds.h"
 
-/* Demo includes. */
-#include "basic_io.h"
 
 #define mainSENDER_1		1
 #define mainSENDER_2		2
 
-/* The tasks to be created.  Two instances are created of the sender task while
-only a single instance is created of the receiver task. */
-static void vSenderTask( void *pvParameters );
-static void vReceiverTask( void *pvParameters );
+// --- GLOBAL Variable DEFINITIONS: --- //
+uint8_t src_addr[SSP_BUFSIZE];
+uint8_t dest_addr[SSP_BUFSIZE];
 
-/*-----------------------------------------------------------*/
+XYZ_t xyzRaw_buffer[32];
+XYZCon_t xyzCon_buffer[32];
+int32_t xyzAvg[3];
+uint8_t xyz_data[6] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66}; // Global variable to hold XYZ data.
+
+int Angle = 0;
+int ControllerSt = 0;
+int ControlCounter = 0;
+int NVIC_TIMER1_IRQ_State = 0;
+char s[10];
+
+/* Declare a variable of type xSemaphoreHandle.  This is used to reference the
+semaphore that is used to synchronize a task with an interrupt. */
+xSemaphoreHandle xCountingSemaphore;
+
+/* Counting semaphore for handling the UART interrupt */
+xSemaphoreHandle xUARTCountSemaphore;
 
 /* Declare a variable of type xQueueHandle.  This is used to store the queue
 that is accessed by IR sensor interrupt handlers and the Display task */
 xQueueHandle xDisplayQueue;
+
+/*-----------------------------------------------------------*/
 
 #if 0
 /* Define the structure type that will be passed on the queue. */
@@ -102,6 +105,24 @@ void clkcfg_init (void)
 	// LPC_SC->CLKOUTCFG |= 0x00000102; // Enables irc_clk output on P1.27
 }
 
+static void setupHardware(void)
+{
+	// Warning: If you do not initialize the hardware clock, the timings will be inaccurate
+	vPrintString("setupHardware\n");
+
+	/* SystemClockUpdate() updates the SystemFrequency variable */
+	SystemCoreClockUpdate();
+
+	/* Initialized SSP1 for SPI to talk to ADXL345 */
+	SSP1InitADXL345();
+
+	/* Initialize the EINT1 GPIO pin for interrupt */
+	EINT1_Init();
+
+	/* Intialize the accel */
+	initialize_accel();
+}
+
 int main( void )
 {
 
@@ -117,6 +138,25 @@ int main( void )
 	init_timer( 0, TIMER0_INTERVAL );  // Used to drive queue
 	enable_timer(0);
 
+	// Initialize UART3:
+	RxIRQ_Fired = 0;
+	UART3_Init(57600); // Setup UART3 to 57600 baud
+	UART3_PrintString ("SEIS-740 Project:\r");  // Send string over UART3.
+	UART3_PrintString ("UART3 waiting.  Input 1st CHAR command = ");  // Send string over UART3.
+
+	/* Before a semaphore is used it must be explicitly created.  In this example
+	a counting semaphore is created.  The semaphore is created to have a maximum
+	count value of 10, and an initial count value of 0. */
+	xCountingSemaphore = xSemaphoreCreateCounting( 10, 0 );
+
+	xUARTCountSemaphore = xSemaphoreCreateCounting( 10, 0 );
+
+	/* Check the semaphore was created successfully. */
+	if( xCountingSemaphore == NULL )
+	{
+		printf("FAILED: could not create counting semaphore for interrupt handling.\n");
+	}
+
 #if 1
 	if( xDisplayQueue != NULL )
 	{
@@ -130,7 +170,20 @@ int main( void )
 
 		/* Create the task that will read from the queue.  The task is created with
 		priority 1, so below the priority of the sender tasks. */
-		xTaskCreate( vReceiverTask, "Display", 600, NULL, 1, NULL );
+		// xTaskCreate( vReceiverTask, "Display", 600, NULL, 1, NULL );
+
+		/* Create the ADXL task. */
+		xTaskCreate( vADXLTask,		/* Pointer to the function that implements the task. */
+					 "ADXL Task",	/* Text name for the task.  This is to facilitate debugging only. */
+					 1024,			/* Stack depth in words. */
+					 NULL,			/* We are not using the task parameter. */
+					 1,				/* This task will run at priority 1. */
+					 NULL );		/* We are not using the task handle. */
+
+		/* Create the UART task */
+		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );
+
+		setupHardware();  // Write all registers to to ADXL345 to setup its configuration.
 
 		/* Start the scheduler so the created tasks start executing. */
 		vTaskStartScheduler();
@@ -140,8 +193,8 @@ int main( void )
 		/* The queue could not be created. */
 		vPrintString( "Could NOT create the display queue.\n" );
 	}
-#endif
 
+#endif
 		
     /* If all is well we will never reach here as the scheduler will now be
     running the tasks.  If we do reach here then it is likely that there was 
@@ -149,183 +202,8 @@ int main( void )
 	for( ;; );
 	return 0;
 }
-/*-----------------------------------------------------------*/
+/*------END of main()-----------------------------------------------------*/
 
-#if 0
-static void vSenderTask( void *pvParameters )
-{
-portBASE_TYPE xStatus;
-const portTickType xTicksToWait = 100 / portTICK_RATE_MS;
-
-	/* As per most tasks, this task is implemented within an infinite loop. */
-	for( ;; )
-	{
-		/* The first parameter is the queue to which data is being sent.  The 
-		queue was created before the scheduler was started, so before this task
-		started to execute.
-
-		The second parameter is the address of the structure being sent.  The
-		address is passed in as the task parameter. 
-
-		The third parameter is the Block time - the time the task should be kept
-		in the Blocked state to wait for space to become available on the queue
-		should the queue already be full.  A block time is specified as the queue
-		will become full.  Items will only be removed from the queue when both
-		sending tasks are in the Blocked state.. */
-		xStatus = xQueueSendToBack( xQueue, pvParameters, xTicksToWait );
-
-		if( xStatus != pdPASS )
-		{
-			/* We could not write to the queue because it was full - this must
-			be an error as the receiving task should make space in the queue
-			as soon as both sending tasks are in the Blocked state. */
-			vPrintString( "Could not send to the queue.\n" );
-		}
-
-		/* Allow the other sender task to execute. */
-		taskYIELD();
-	}
-}
-/*-----------------------------------------------------------*/
-#endif
-
-static void vReceiverTask( void *pvParameters )
-{
-    /* Declare the structure that will hold the values received from the queue. */
-    dispReq xReceivedRequest;
-    portBASE_TYPE xStatus;
-    portTickType xLastWakeTime;
-
-    /* The xLastWakeTime variable needs to be initialized with the current tick
-    count.  Note that this is the only time we access this variable.  From this
-    point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
-    API function. */
-    xLastWakeTime = xTaskGetTickCount();
-
-	/* This task is also defined within an infinite loop. */
-	for( ;; )
-	{
-#if 0
-		/* As this task only runs when the sending tasks are in the Blocked state, 
-		and the sending tasks only block when the queue is full, this task should
-		always find the queue to be full.  3 is the queue length. */
-		//if( uxQueueMessagesWaiting( xDisplayQueue ) != 3 )
-		//{
-		//	vPrintString( "Queue should have been full!\n" );
-		//}
-
-		/* The first parameter is the queue from which data is to be received.  The
-		queue is created before the scheduler is started, and therefore before this
-		task runs for the first time.
-
-		The second parameter is the buffer into which the received data will be
-		placed.  In this case the buffer is simply the address of a variable that
-		has the required size to hold the received structure. 
-
-		The last parameter is the block time - the maximum amount of time that the
-		task should remain in the Blocked state to wait for data to be available 
-		should the queue already be empty.  A block time is not necessary as this
-		task will only run when the queue is full so data will always be available. */
-		xStatus = xQueueReceive( xDisplayQueue, &xReceivedRequest, portMAX_DELAY );
-
-		if( xStatus == pdPASS )
-		{
-			//vPrintStringAndNumber("Display Request received from ", xReceivedRequest.irID);
-			vPrintStringAndNumber("Display Request timer value ", xReceivedRequest.tVal);
-
-			//Display_displayNumber(xReceivedRequest.irID, xReceivedRequest.tVal, 0, 0);
-		}
-		else
-		{
-			/* We did not receive anything from the queue.  This must be an error 
-			as this task should only run when the queue is full. */
-			vPrintString( "Could not receive from the dispaly queue.\n" );
-			if (xStatus == errQUEUE_EMPTY)
-			{
-				vPrintString( "The queue is empty.\n");
-			}
-		}
-#endif
-
-	    unsigned int dispVal;
-
-	    dispVal = create_display_val(100000000);  // too high
-		//printf("10000 Expected 40404040, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("10000 Expected 40404040, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		/* We want this task to execute exactly every 250 milliseconds.  As per
-		the vTaskDelay() function, time is measured in ticks, and the
-		portTICK_RATE_MS constant is used to convert this to milliseconds.
-		xLastWakeTime is automatically updated within vTaskDelayUntil() so does not
-		have to be updated by this task code. */
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(99990000); // 9999
-		//printf(" 9999 Expected 67676767, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber(" 9999 Expected 67676767, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(8765000); // 876.5
-		//printf("876.5 Expected 7f07fd6b, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("876.5 Expected 7f07fd6b, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-	    dispVal = create_display_val(765400); // 76.54
-		//printf("76.54 Expected 07fd6b66, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("76.54 Expected 07fd6b66, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(65430); // 6.543
-		//printf("6.543 Expected fd6b664f, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("6.543 Expected fd6b664f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(5430); // 0.543
-		//printf("0.543 Expected bf6b664f, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("0.543 Expected bf6b664f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(432);  // 0.043
-		//printf("0.043 Expected bf3f664f, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("0.043 Expected bf3f664f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(32);   // 0.003
-		//printf("0.003 Expected bf3f3f4f, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("0.003 Expected bf3f3f4f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(1);    // 0.000
-		//printf("0.000 Expected bf3f3f3f, dispVal = %x\n", dispVal);
-	    //vPrintStringAndNumber("0.000 Expected bf3f3f3f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-
-		dispVal = create_display_val(0);    // 0.000
-		//printf("0,000 Expected bf3f3f3f, dispVal = %x\n", dispVal);
-	    vPrintStringAndNumber("0,000 Expected bf3f3f3f, dispVal = ", dispVal);
-	    //Display_displayNumber(DISP_1_1, dispVal, 0, 0);
-
-		vTaskDelayUntil( &xLastWakeTime, ( 250 / portTICK_RATE_MS ) );
-	}
-}
-/*-----------------------------------------------------------*/
 
 void vApplicationMallocFailedHook( void )
 {

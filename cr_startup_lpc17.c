@@ -298,7 +298,7 @@ void HardFault_Handler(void)
 {
     while(1)
     {
-    	vPrintString( "I'm in the HARDFAULT_Handler!\n" );
+    	// vPrintString( "I'm in the HARDFAULT_Handler!\n" );
     }
 }
 
