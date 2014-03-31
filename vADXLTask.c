@@ -6,6 +6,8 @@
  * NXP LPC1769 uC running FreeRTOS - ADXL Task
 */
 
+#include "stdlib.h"
+
 // FreeRTOS.org includes.
 #include "FreeRTOS.h"
 #include "task.h"

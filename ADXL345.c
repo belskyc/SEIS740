@@ -5,6 +5,8 @@
  *      Author: jhatch
  */
 
+#include "stdio.h"
+
 #include "LPC17xx.h"
 #include "ssp.h"
 #include "ADXL345_init.h"
@@ -147,7 +149,6 @@ void
 initialize_accel()
 {
 	uint8_t k = 0;
-	// int i;
 
 	/*
 	 * 	As a general rule, configure the digital accelerometers in the following order:
@@ -158,8 +159,9 @@ initialize_accel()
 	 * 	5. Place part into measurement mode: POWER_CTL register.
 	 */
 
+	// Go into standby mode to configure the device.
+	writeADXL345(REG_POWER_CTL, CONFIG_POWER_CTL);  // = 0x00
 
-	//while(1) {
 	// Data format control: set first to setup 4-wire SPI.
 	writeADXL345(REG_DATA_FORMAT, INIT_DATA_FORMAT);
 	// Data Rate and power mode control
@@ -170,6 +172,16 @@ initialize_accel()
 	writeADXL345(REG_OFSY, INIT_OFSY);
 	// Z-axis offset
 	writeADXL345(REG_OFSZ, INIT_OFSZ);
+
+	// Activity Threshold
+	writeADXL345(REG_THRESH_ACT, INIT_THRESH_ACT);
+	// Axis enable control for activity and inactivity detection
+	writeADXL345(REG_ACT_INACT_CTL, INIT_ACT_INACT_CTL);
+	// Inactivity Threshold
+	writeADXL345(REG_THRESH_INACT, INIT_THRESH_INACT);
+	// Inactivity Time
+	writeADXL345(REG_TIME_INACT, INIT_TIME_INACT);
+
 	// Tap Threshold register
 	writeADXL345(REG_THRESH_TAP, INIT_THRESH_TAP);
 	// Tap Duration
@@ -178,30 +190,26 @@ initialize_accel()
 	writeADXL345(REG_LATENT, INIT_LATENT);
 	// Tap Window
 	writeADXL345(REG_WINDOW, INIT_WINDOW);
-	// Activity Threshold
-	writeADXL345(REG_THRESH_ACT, INIT_THRESH_ACT);
-	// Inactivity Threshold
-	writeADXL345(REG_THRESH_INACT, INIT_THRESH_INACT);
-	// Inactivity Time
-	writeADXL345(REG_TIME_INACT, INIT_TIME_INACT);
-	// Axis enable control for activity and inactivity detection
-	writeADXL345(REG_ACT_INACT_CTL, INIT_ACT_INACT_CTL);
+	// Axis control for single tap/double tap
+	writeADXL345(REG_TAP_AXES, INIT_TAP_AXES);
+
 	// Free-Fall threshold
 	writeADXL345(REG_THRESH_FF, INIT_THRESH_FF);
 	// Free-Fall time
 	writeADXL345(REG_TIME_FF, INIT_TIME_FF);
-	// Axis control for single tap/double tap
-	writeADXL345(REG_TAP_AXES, INIT_TAP_AXES);
+
 	// Interrupt mapping control
 	writeADXL345(REG_INT_MAP, INIT_INT_MAP);
+
 	// FIFO control : STREAM mode & # samples to trigger IRQ.
 	writeADXL345(REG_FIFO_CTL, INIT_FIFO_CTL);
+
 	// Interrupt enable control
 	writeADXL345(REG_INT_ENABLE, INIT_INT_ENABLE);
 	// Power-saving features control
 	writeADXL345(REG_POWER_CTL, INIT_POWER_CTL);  // starts measurement mode
 
-	// for ( i = 0; i < 0x50; i++ );  /* delay */
+	// Now read out the settings:
 	k = readADXL345(REG_DATA_FORMAT);
 	printf("REG_DATA_FORMAT = %x\n", k);
 	k = readADXL345(REG_BW_RATE);
@@ -243,5 +251,8 @@ initialize_accel()
 	k = readADXL345(REG_POWER_CTL);
 	printf("REG_POWER_CTL = %x\n", k);
 	printf("------------------\n");
-	//}
+	// Clear the Activity Interrupt by reading the INT_SOURCE register from the ADXL345.
+	k = readADXL345(REG_INT_SOURCE);
+	printf("INIT: REG_INT_SOURCE = %x\n", k);
+	printf("------------------\n");
 }

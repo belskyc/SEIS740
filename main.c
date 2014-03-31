@@ -4,6 +4,8 @@
  * Chris Belsky & Jeff Hatch *
 */
 
+#include "stdio.h"
+
 // FreeRTOS.org includes.
 #include "FreeRTOS.h"
 #include "task.h"
@@ -52,6 +54,9 @@ xSemaphoreHandle xCountingSemaphore;
 
 /* Counting semaphore for handling the UART interrupt */
 xSemaphoreHandle xUARTCountSemaphore;
+
+// MUTEX semaphore for handling the ADXL345 "Active" interrupt.
+xSemaphoreHandle xADXLActiveSemaphore;
 
 /* Declare a variable of type xQueueHandle.  This is used to store the queue
 that is accessed by IR sensor interrupt handlers and the Display task */
@@ -116,7 +121,8 @@ static void setupHardware(void)
 	/* Initialized SSP1 for SPI to talk to ADXL345 */
 	SSP1InitADXL345();
 
-	/* Initialize the EINT1 GPIO pin for interrupt */
+	/* Initialize the EINT GPIO pins for interrupt */
+	EINT0_Init();
 	EINT1_Init();
 
 	/* Intialize the accel */
@@ -148,14 +154,16 @@ int main( void )
 	a counting semaphore is created.  The semaphore is created to have a maximum
 	count value of 10, and an initial count value of 0. */
 	xCountingSemaphore = xSemaphoreCreateCounting( 10, 0 );
+	/* Check the semaphore was created successfully. */
+	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xCountingSemaphore!\n"); }
 
 	xUARTCountSemaphore = xSemaphoreCreateCounting( 10, 0 );
-
 	/* Check the semaphore was created successfully. */
-	if( xCountingSemaphore == NULL )
-	{
-		printf("FAILED: could not create counting semaphore for interrupt handling.\n");
-	}
+	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xUARTCountSemaphore!\n"); }
+
+	vSemaphoreCreateBinary(xADXLActiveSemaphore);
+	/* Check the semaphore was created successfully. */
+	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xADXLActiveSemaphore!\n"); }
 
 #if 1
 	if( xDisplayQueue != NULL )
@@ -183,7 +191,15 @@ int main( void )
 		/* Create the UART task */
 		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );
 
+		/* Create the ADXL345 "Active" interrupt task */
+		xTaskCreate( vADXLActiveTask, "ADXL Active Task", 512, NULL, 1, NULL );
+
+		// Disable the External interrupts to the ADXL while setting up HW.
+		NVIC_DisableIRQ( EINT0_IRQn );
+		NVIC_DisableIRQ( EINT1_IRQn );
 		setupHardware();  // Write all registers to to ADXL345 to setup its configuration.
+		NVIC_EnableIRQ( EINT0_IRQn );
+		NVIC_EnableIRQ( EINT1_IRQn );
 
 		/* Start the scheduler so the created tasks start executing. */
 		vTaskStartScheduler();

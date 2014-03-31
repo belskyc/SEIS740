@@ -1,4 +1,7 @@
-//#include "stdio.h"
+//
+
+#include "stdio.h"
+
 #include "LPC17xx.h"
 
 #include "display.h"

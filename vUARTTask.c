@@ -6,6 +6,8 @@
  * NXP LPC1769 uC running FreeRTOS - UART Task
 */
 
+#include "stdio.h"
+
 // FreeRTOS.org includes.
 #include "FreeRTOS.h"
 #include "task.h"

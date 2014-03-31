@@ -10,3 +10,4 @@ void vSenderTask( void *pvParameters );
 void vReceiverTask( void *pvParameters );
 void vUARTTask( void *pvParameters );
 void vADXLTask( void *pvParameters );
+void vADXLActiveTask( void *pvParameters );

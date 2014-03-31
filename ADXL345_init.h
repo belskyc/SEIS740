@@ -53,29 +53,46 @@
  #define INIT_OFSX       	0x00	// X-axis offset TBD
  #define INIT_OFSY			0x00	// Y-axis offset TBD
  #define INIT_OFSZ			0x00	// Z-axis offset TBD
- #define INIT_DUR			0x00	// Tap Duration (disabled)
- #define INIT_LATENT		0x00	// Tap Latency (disabled)
- #define INIT_WINDOW		0x00	// Tap Window (disabled)
+ //#define INIT_DUR			0x00	// Tap Duration (disabled)
+ //#define INIT_LATENT		0x00	// Tap Latency (disabled)
+ //#define INIT_WINDOW		0x00	// Tap Window (disabled)
+ #define INIT_DUR			0x64	// Tap Duration (enabled)
+ #define INIT_LATENT		0x64	// Tap Latency (enabled)
+ #define INIT_WINDOW		0x64	// Tap Window (enabled)
+
  //#define INIT_THRESH_ACT	0x03	// Activity Threshold ~.18g
- #define INIT_THRESH_ACT	0x7F	// Activity Threshold - N/A
- //#define INIT_THRESH_INACT	0x01	// Inactivity Threshold ~.0625g
+ //#define INIT_THRESH_ACT	0x7F	// Activity Threshold - N/A
+ //#define INIT_THRESH_ACT	0x01	// Activity Threshold 62.5mg
+ //#define INIT_THRESH_ACT	0x10	// Activity Threshold set to 1g
+ //#define INIT_THRESH_ACT	0x04	// Activity Threshold set to 0.25g
+ #define INIT_THRESH_ACT	0x40	// Activity Threshold 4g
+ //#define INIT_THRESH_ACT	0xFF	// Activity Threshold 16g
+
  #define INIT_THRESH_INACT	0x7F	// Inactivity Threshold - N/A
  #define INIT_TIME_INACT	0x01	// Inactivity Time 1s
- #define INIT_ACT_INACT_CTL	0x00	// Axis enable control for activity and inactivity detection
+
+ // #define INIT_ACT_INACT_CTL	0x00	// Axis enable control for activity and inactivity detection
+ #define INIT_ACT_INACT_CTL	0x60	// Activity is DC-coupled; Enabled ACT_X & ACT_Y axis
+ //#define INIT_ACT_INACT_CTL	0xE0	// Activity is AC-coupled; Enabled ACT_X & ACT_Y axis
+
  #define INIT_THRESH_FF		0x05	// Free-Fall threshold - desireable behavior
  #define INIT_TIME_FF		0x46	// Free-Fall time - desireable behavior
  #define INIT_TAP_AXES		0x00	// Axis control for single tap/double tap disabled
  #define INIT_ACT_TAP_STATUS 0x00	// Source of single tap/double tap. Read-Only
- //#define INIT_BW_RATE		0x09	// Data Rate and power mode control 100Hz
  #define INIT_BW_RATE		0x09	// Data Rate and power mode control 50Hz - sample rate 25Hz
+ #define CONFIG_POWER_CTL	0x00	// Power-saving features control
  #define INIT_POWER_CTL		0x08	// Power-saving features control - init last?
+
  //#define INIT_INT_ENABLE	0x83	// Interrupt enable control DataReady, Watermark, Overrun
- #define INIT_INT_ENABLE	0x02	// Interrupt enable control DataReady, Watermark, Overrun
- //#define INIT_INT_MAP		0x03	// Interrupt mapping control DataReady -> 1, Watermark & Overrun -> 0
- #define INIT_INT_MAP		0x02	// Interrupt mapping control DataReady -> 1, Watermark & Overrun -> 0
+ //#define INIT_INT_ENABLE	0x02	// Interrupt enable Watermark
+ //#define INIT_INT_ENABLE	0x12	// Interrupt enable Watermark, Activity
+ #define INIT_INT_ENABLE	0x10	// Interrupt enable Activity
+
+ #define INIT_INT_MAP		0x02	// Interrupt mapping Watermark -> interrupt pin INT2; all others -> pin INT1
  //#define INIT_INT_SOURCE	0x00	// Source of interrupts.  Read-Only
  #define INIT_INT_SOURCE	0x00	// Source of interrupts.  Read-Only
- #define INIT_DATA_FORMAT	0x0C	// Data format control, SPI, Active High, Full Res, Justify, +/- 2g
+ //#define INIT_DATA_FORMAT	0x0C	// Data format control, SPI, Active HIGH, Full Res, Justify, +/- 2g
+ #define INIT_DATA_FORMAT	0x2C	// Data format control, SPI, Active LOW, Full Res, Justify, +/- 2g
  #define INIT_DATAX0		0x00	// X-Axis Data 0.  Read-Only
  #define INIT_DATAX1		0x00	// X-Axis Data 1.  Read-Only
  #define INIT_DATAY0		0x00	// Y-Axis Data 0.  Read-Only

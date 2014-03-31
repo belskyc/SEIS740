@@ -18,6 +18,9 @@
  * warranty that such application will be suitable for the specified
  * use without further testing or modification.
 ****************************************************************************/
+
+#include "stdio.h"
+
 #include "LPC17xx.h"			/* LPC17xx Peripheral Registers */
 #include "ssp.h"
 #include "ADXL345_init.h"

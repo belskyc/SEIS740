@@ -28,11 +28,16 @@ extern xSemaphoreHandle xCountingSemaphore;
 /* Counting semaphore for handling the UART interrupt */
 extern xSemaphoreHandle xUARTCountSemaphore;
 
+// MUTEX semaphore for handling the ADXL345 "Active" interrupt.
+extern xSemaphoreHandle xADXLActiveSemaphore;
+
 /* Declare a variable of type xQueueHandle.  This is used to store the queue
 that is accessed by IR sensor interrupt handlers and the Display task */
 xQueueHandle xDisplayQueue;
 
 extern char str[30];
+
+extern char junkEINT0; // DEBUG variable.
 
 // SSP GLOBAL Variables:
 extern uint8_t src_addr[SSP_BUFSIZE];
