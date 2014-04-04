@@ -121,9 +121,11 @@ static void setupHardware(void)
 	/* Initialized SSP1 for SPI to talk to ADXL345 */
 	SSP1InitADXL345();
 
-	/* Initialize the EINT GPIO pins for interrupt */
+	/* Initialize the External-Interrupt EINT GPIO pins for interrupt */
 	EINT0_Init();
 	EINT1_Init();
+	EINT2_Init();
+	EINT3_Init();
 
 	/* Intialize the accel */
 	initialize_accel();
@@ -131,7 +133,7 @@ static void setupHardware(void)
 
 int main( void )
 {
-
+	// Initialization routines.
 	clkcfg_init();
 	leds_init();
 	Display_init();
@@ -197,9 +199,14 @@ int main( void )
 		// Disable the External interrupts to the ADXL while setting up HW.
 		NVIC_DisableIRQ( EINT0_IRQn );
 		NVIC_DisableIRQ( EINT1_IRQn );
+		NVIC_DisableIRQ( EINT2_IRQn );
+		NVIC_DisableIRQ( EINT3_IRQn );
 		setupHardware();  // Write all registers to to ADXL345 to setup its configuration.
+		// Only enable the external interrupts after HW has been configured.
 		NVIC_EnableIRQ( EINT0_IRQn );
 		NVIC_EnableIRQ( EINT1_IRQn );
+		NVIC_EnableIRQ( EINT2_IRQn );
+		// NVIC_EnableIRQ( EINT3_IRQn );
 
 		/* Start the scheduler so the created tasks start executing. */
 		vTaskStartScheduler();

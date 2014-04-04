@@ -38,6 +38,9 @@ xQueueHandle xDisplayQueue;
 extern char str[30];
 
 extern char junkEINT0; // DEBUG variable.
+extern char junkEINT1; // DEBUG variable.
+extern char junkEINT2; // DEBUG variable.
+extern char junkEINT3; // DEBUG variable.
 
 // SSP GLOBAL Variables:
 extern uint8_t src_addr[SSP_BUFSIZE];
