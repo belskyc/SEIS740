@@ -5,6 +5,9 @@
  *      Author: Jeff
  */
 
+#ifndef _IR_SENSOR_H
+#define _IR_SENSOR_H
+
 #define IR_ID_1_1	0
 #define IR_ID_1_2   1
 #define IR_ID_1_3   2
@@ -13,6 +16,15 @@
 #define IR_ID_2_2   5
 #define IR_ID_2_3	6
 #define IR_ID_2_4   7
+
+#define IR_IDX_1_1	0
+#define IR_IDX_1_2 	1
+#define IR_IDX_1_3  2
+#define IR_IDX_1_4	3
+#define IR_IDX_2_1	4
+#define IR_IDX_2_2	5
+#define IR_IDX_2_3	6
+#define IR_IDX_2_4  7
 
 typedef struct
 {
@@ -50,4 +62,4 @@ IR_IRQ_handler_2_4();
 int
 IR_init();
 
-
+#endif // IR_SENSOR_H

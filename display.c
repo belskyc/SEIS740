@@ -368,7 +368,7 @@ Display_displayNumber(const uint8_t dispID,
     uint32_t dispVal = 0;
 	
 	dispVal = create_display_val(timerVal);
-
+	//vPrintStringAndNumber("Display_displayNumber: dispVal = ", dispVal);
 	display(dispID, dispVal, LED1, LED2);
 
 }

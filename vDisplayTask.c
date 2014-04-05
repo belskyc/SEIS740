@@ -30,7 +30,7 @@ void vDisplayTask( void *pvParameters )
     portBASE_TYPE xStatus;
     portTickType xLastWakeTime;
 
-	vPrintString( "vReceiverTask started\n" );
+	vPrintString( "vDisplayTask started\n" );
     /* The xLastWakeTime variable needs to be initialized with the current tick
     count.  Note that this is the only time we access this variable.  From this
     point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -61,7 +61,7 @@ void vDisplayTask( void *pvParameters )
 		task should remain in the Blocked state to wait for data to be available 
 		should the queue already be empty.  A block time is not necessary as this
 		task will only run when the queue is full so data will always be available. */
-		vPrintString("vReceiverTask checking queue");
+		vPrintString("vDisplayTask checking queue");
 		xStatus = xQueueReceive( xDisplayQueue, &xReceivedRequest, portMAX_DELAY );
 
 		if( xStatus == pdPASS )
