@@ -14,6 +14,8 @@
 
 #include "ADXL345.h"
 #include "ssp.h"
+#include "irSensors.h"
+
 
 /* Be careful with the port number and location number, because
 some of the location may not exist in that port. */
@@ -62,3 +64,6 @@ extern char s[10];
 extern uint8_t RxBuf[2];
 extern uint8_t UART3_LSR, UART3_IIR;
 extern char RxIRQ_Fired;
+
+extern xQueueHandle xDisplayQueue;
+extern dispReq DisplayRequests[];

@@ -162,6 +162,10 @@ int main( void )
 	init_timer( 0, TIMER0_INTERVAL );  // Used to drive queue
 	enable_timer(0);
 
+	timer1_counter = 0; // Clear the counter used for the 7-segment display.
+	init_timer( 1, TIMER1_INTERVAL );  // Used to drive queue
+	enable_timer(1);
+
 	// Initialize UART3:
 	RxIRQ_Fired = 0;
 	UART3_Init(57600); // Setup UART3 to 57600 baud
@@ -193,18 +197,22 @@ int main( void )
 		tasks are created at priority 2 which is above the priority of the . */
 		//xTaskCreate( vSenderTask, "Sender1", 240, ( void * ) &( xStructsToSend[ 0 ] ), 2, NULL );
 		//xTaskCreate( vSenderTask, "Sender2", 240, ( void * ) &( xStructsToSend[ 1 ] ), 2, NULL );
+		xTaskCreate( vSenderTask, "Sender1", 240, NULL, 1, NULL );
 
 		/* Create the task that will read from the queue.  The task is created with
 		priority 1, so below the priority of the sender tasks. */
-		 xTaskCreate( vDisplayTask, "Display", 600, NULL, 1, NULL );
+		 xTaskCreate( vDisplayTask, "Display", 512, NULL, 1, NULL );
 
 		/* Create the ADXL task. */
+#if 0
 		xTaskCreate( vADXLTask,		/* Pointer to the function that implements the task. */
 					 "ADXL Task",	/* Text name for the task.  This is to facilitate debugging only. */
 					 1024,			/* Stack depth in words. */
 					 NULL,			/* We are not using the task parameter. */
 					 1,				/* This task will run at priority 1. */
 					 NULL );		/* We are not using the task handle. */
+#endif
+
 
 		/* Create the UART task */
 		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );

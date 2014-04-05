@@ -16,7 +16,7 @@
 // Interrupt interval times: assumes using OSC_CLK = 12MHz = CCLK.
 // PCLKSEL0 register: PCLK_TIMERn bits = '00' =>  PCLK = CCLK/4
 //  Thus, PCLK = 3MHz.
-#define TIMER0_INTERVAL  3000000  // 1 second
+#define TIMER0_INTERVAL  300      // .1 ms
 #define TIMER1_INTERVAL  60	      // 2uSec * 3MHz = 6 => 500kHz; 2mSec * 3MHz = 6000 => 500Hz
 
 // PCONP Register: Power Control for Peripherals Register.
