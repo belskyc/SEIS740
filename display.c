@@ -3,6 +3,8 @@
 #include "stdio.h"
 
 #include "LPC17xx.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "display.h"
 #include "timer.h"
@@ -18,7 +20,7 @@
 	2 ABDEG     1 1 0 1 1 0 1 ?  5/D B 
 	3 ABCDG     1 1 1 1 0 0 1 ?  4/C F
 	4 BCFG      0 1 1 0 0 1 1 ?  6/E 6
-	5 ACDFG     1 0 1 1 0 1 1 ?  6/E B
+	5 ACDFG     1 0 1 1 0 1 1 ?  6/E D
 	6 ACDEFG    1 0 1 1 1 1 1 ?  7/F D
 	7 ABC       1 1 1 0 0 0 0 ?  0/8 7
 	8 ABCDEFG   1 1 1 1 1 1 1 ?  7/F F
@@ -33,7 +35,7 @@ static const int numbers[] =
 	0x5B,
 	0x4F,
 	0x66,
-	0x6B,
+	0x6D,
 	0x7D,
 	0x07,
 	0x7F,
@@ -49,7 +51,7 @@ static const int numbers_dp[] =
 	0xDB,
 	0xCF,
 	0xE6,
-	0xEB,
+	0xED,
 	0xFD,
 	0x87,
 	0xFF,
@@ -132,27 +134,25 @@ create_display_val(unsigned int timerVal)
 	}
 	
 	int j = 0;
-	for (j = 0; j < 4; j++)
+	for (j = i + 3; j >= i; j--)
 	{
 	    dsBits = dsBits << 8;
 		//printf("digits[%d] = %d\n", i, digits[i]);
-		if (3 == i)
+		if (3 == j)
 		{
-		    dsBits |= numbers_dp[digits[i]];
+		    dsBits |= numbers_dp[digits[j]];
 		}
 		else
 		{
-		    dsBits |= numbers[digits[i]];
+		    dsBits |= numbers[digits[j]];
 		}
 
-		i++;
 	}
 	
 	return dsBits;
 }
 
-#if 1
-void pushBit_1_1(uint32_t bit)
+void pushBit(const uint32_t bit, const uint8_t dispID)
 {
 	uint8_t i = 0;
 	uint8_t k = 0;
@@ -164,8 +164,35 @@ void pushBit_1_1(uint32_t bit)
 			__NOP;  // Do nothing while waiting for timer event.
 	}
 
-	// Now shift bit to 7-Segment Display.
-	LPC_GPIO1->FIOCLR |= GPIO_P1_29;  // ENABLE the 7SegDisp.
+	switch(dispID)
+	{
+	    case DISP_1_1:
+	    	LPC_GPIO1->FIOCLR |= GPIO_P1_29;  // ENABLE the 7SegDisp.
+	    	break;
+	    case DISP_2_1:
+	    	return;
+	    	break;
+	    case DISP_1_2:
+	    	return;
+	    	break;
+	    case DISP_2_2:
+	    	return;
+	    	break;
+	    case DISP_1_3:
+	    	return;
+	        break;
+	    case DISP_2_3:
+	    	return;
+	    	break;
+	    case DISP_1_4:
+	    	return;
+	    	break;
+	    case DISP_2_4:
+	    	return;
+	    	break;
+	    default:
+	        return;
+	}
 
 	if(bit) // Push "1" bit
 	{
@@ -194,367 +221,93 @@ void pushBit_1_1(uint32_t bit)
 
 	return;
 }
-#else
-
-void pushBit_1_1(uint32_t bit)
-{
-
-}
-#endif
 
 void
-display_1_1(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
+display(uint32_t id,
+		uint32_t val,
+        uint8_t LED1,
+	    uint8_t LED2)
 {
 	uint32_t dispBit;
 	uint8_t i = 0;
+	uint8_t k = 0;
 
 	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_1_1(1); // Push a START-bit (bit-1).
+
+	pushBit(1, id); // Push a START-bit (bit-1).
+	//vPrintStringAndNumber("pushing bit", 1);
 
 	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
 	{
 		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_1_1(dispBit);
+		//vPrintStringAndNumber("pushing bit", dispBit);
+		pushBit(dispBit, id);
 	}
 
 	// Push LED bits (bits 34 & 35).
 	if(LED1)
 	{
-		pushBit_1_1(1);
+		pushBit(1, id);
+		//vPrintStringAndNumber("pushing bit", 1);
 	}
 	else
 	{
-		pushBit_1_1(0);
+		pushBit(0, id);
+		//vPrintStringAndNumber("pushing bit", 0);
 	}
 
 	if (LED2)
 	{
-		pushBit_1_1(1);
+		pushBit(1, id);
+		//vPrintStringAndNumber("pushing bit", 1);
 	}
 	else
 	{
-		pushBit_1_1(0);
+		pushBit(0, id);
+		//vPrintStringAndNumber("pushing bit", 0);
 	}
 
-	pushBit_1_1(1); // Push a LOAD-bit.
-}
-
-void pushBit_1_2(uint32_t bit)
-{
-
-}
-
-void
-display_1_2(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_1_2(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
+	pushBit(1, id); // Push a LOAD-bit.
+	//vPrintStringAndNumber("pushing bit", 1);
+	// Wait for 2 timer events to ensure one full timer period has elapsed.
+	for(k = 0; k < 2; k++)
 	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_1_2(dispBit);
+		timer1_runStatus = 0; // Clear timer flag.
+		while(!timer1_runStatus)
+			__NOP;  // Do nothing while waiting for timer event.
 	}
 
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
+	LPC_GPIO1->FIOCLR |= GPIO_P1_26;  // FALLING-EDGE the CLOCK to the 7SegDisp.
+
+	switch(id)
 	{
-		pushBit_1_2(1);
+	    case DISP_1_1:
+	    	LPC_GPIO1->FIOSET |= GPIO_P1_29;  // DISABLE the 7SegDisp.
+	    	break;
+	    case DISP_2_1:
+	    	return;
+	    	break;
+	    case DISP_1_2:
+	    	return;
+	    	break;
+	    case DISP_2_2:
+	    	return;
+	    	break;
+	    case DISP_1_3:
+	    	return;
+	        break;
+	    case DISP_2_3:
+	    	return;
+	    	break;
+	    case DISP_1_4:
+	    	return;
+	    	break;
+	    case DISP_2_4:
+	    	return;
+	    	break;
+	    default:
+	        return;
 	}
-	else
-	{
-		pushBit_1_2(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_1_2(1);
-	}
-	else
-	{
-		pushBit_1_2(0);
-	}
-
-	pushBit_1_2(1); // Push a LOAD-bit.
-}
-
-void pushBit_1_3(uint32_t bit)
-{
-
-}
-
-void
-display_1_3(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_1_3(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_1_3(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_1_3(1);
-	}
-	else
-	{
-		pushBit_1_3(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_1_3(1);
-	}
-	else
-	{
-		pushBit_1_3(0);
-	}
-
-	pushBit_1_3(1); // Push a LOAD-bit.
-}
-
-void pushBit_1_4(uint32_t bit)
-{
-
-}
-
-void
-display_1_4(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_1_4(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_1_4(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_1_4(1);
-	}
-	else
-	{
-		pushBit_1_4(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_1_4(1);
-	}
-	else
-	{
-		pushBit_1_4(0);
-	}
-
-	pushBit_1_4(1); // Push a LOAD-bit.
-}
-
-void pushBit_2_1(uint32_t bit)
-{
-
-}
-
-void
-display_2_1(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_2_1(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_2_1(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_2_1(1);
-	}
-	else
-	{
-		pushBit_2_1(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_2_1(1);
-	}
-	else
-	{
-		pushBit_2_1(0);
-	}
-
-	pushBit_2_1(1); // Push a LOAD-bit.
-}
-
-void pushBit_2_2(uint32_t bit)
-{
-
-}
-
-void
-display_2_2(uint32_t val,
-            uint8_t LED1,
-		    uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_2_2(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_2_2(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_2_2(1);
-	}
-	else
-	{
-		pushBit_2_2(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_2_2(1);
-	}
-	else
-	{
-		pushBit_2_2(0);
-	}
-
-	pushBit_2_2(1); // Push a LOAD-bit.
-}
-
-void pushBit_2_3(uint32_t bit)
-{
-
-}
-
-void
-display_2_3(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_2_3(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_2_3(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_2_3(1);
-	}
-	else
-	{
-		pushBit_2_3(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_2_3(1);
-	}
-	else
-	{
-		pushBit_2_3(0);
-	}
-
-	pushBit_2_3(1); // Push a LOAD-bit.
-}
-
-void pushBit_2_4(uint32_t bit)
-{
-
-}
-
-void
-display_2_4(uint32_t val,
-            uint8_t LED1,
-			uint8_t LED2)
-{
-	// 36 total bits to push out to the 7-Segment Display.
-	uint32_t dispBit;
-	uint8_t i = 0;
-
-	// 36 total bits to push out to the 7-Segment Display.
-	pushBit_2_4(1); // Push a START-bit (bit-1).
-
-	for(i = 0; i < 32; i++) // Push 32 digit bits (bits 2-33).
-	{
-		dispBit = (val >> i) & 0x1;  // Mask bit
-		pushBit_2_4(dispBit);
-	}
-
-	// Push LED bits (bits 34 & 35).
-	if(LED1)
-	{
-		pushBit_2_4(1);
-	}
-	else
-	{
-		pushBit_2_4(0);
-	}
-
-	if (LED2)
-	{
-		pushBit_2_4(1);
-	}
-	else
-	{
-		pushBit_2_4(0);
-	}
-
-	pushBit_2_4(1); // Push a LOAD-bit.
 }
 
 void
@@ -616,36 +369,8 @@ Display_displayNumber(const uint8_t dispID,
 	
 	dispVal = create_display_val(timerVal);
 
-    switch(dispID) 
-	{
-	    case DISP_1_1:
-		    display_1_1(dispVal, LED1, LED2);
-		    break;
-		case DISP_2_1:
-		    display_2_1(dispVal, LED1, LED2);
-		    break;
-		case DISP_1_2:
-		    display_1_2(dispVal, LED1, LED2);
-		    break;
-		case DISP_2_2:
-		    display_2_2(dispVal, LED1, LED2);
-		    break;
-		case DISP_1_3:
-			display_1_3(dispVal, LED1, LED2);
-		    break;
-		case DISP_2_3:
-		    display_2_3(dispVal, LED1, LED2);
-		    break;
-		case DISP_1_4:
-		    display_1_4(dispVal, LED1, LED2);
-		    break;
-		case DISP_2_4:
-		    display_2_4(dispVal, LED1, LED2);
-		    break;
-		default:
-		    /* error ? */
-			printf("Display_displayNumber: unknown display specified.\n");
-	}
+	display(dispID, dispVal, LED1, LED2);
+
 }
 
 #if UNIT_TEST

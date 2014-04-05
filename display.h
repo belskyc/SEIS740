@@ -63,6 +63,3 @@ Display_displayNumber(const uint8_t dispID,
                       const uint32_t timerVal,
 					  const uint8_t LED1,
 					  const uint8_t LED2);
-
-unsigned int
-create_display_val(unsigned int timerVal);
