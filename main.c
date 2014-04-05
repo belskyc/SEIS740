@@ -62,6 +62,22 @@ xSemaphoreHandle xADXLActiveSemaphore;
 that is accessed by IR sensor interrupt handlers and the Display task */
 xQueueHandle xDisplayQueue;
 
+/* Array of display requests for each IR handler.  This is used to
+ * pass from the IR sensor interrupt handler into the queue and then
+ * is pulled off of the queue in the receiver task
+ */
+dispReq DisplayRequests[] =
+{
+		{ IR_ID_1_1, 0 },
+		{ IR_ID_1_2, 0 },
+		{ IR_ID_1_3, 0 },
+		{ IR_ID_1_4, 0 },
+		{ IR_ID_2_1, 0 },
+		{ IR_ID_2_2, 0 },
+		{ IR_ID_2_3, 0 },
+		{ IR_ID_2_4, 0 },
+};
+
 /*-----------------------------------------------------------*/
 
 #if 0
@@ -174,13 +190,13 @@ int main( void )
 		parameter is used to pass the structure that the task should write to the 
 		queue, so one task will continuously send xStructsToSend[ 0 ] to the queue
 		while the other task will continuously send xStructsToSend[ 1 ].  Both 
-		tasks are created at priority 2 which is above the priority of the receiver. */
+		tasks are created at priority 2 which is above the priority of the . */
 		//xTaskCreate( vSenderTask, "Sender1", 240, ( void * ) &( xStructsToSend[ 0 ] ), 2, NULL );
 		//xTaskCreate( vSenderTask, "Sender2", 240, ( void * ) &( xStructsToSend[ 1 ] ), 2, NULL );
 
 		/* Create the task that will read from the queue.  The task is created with
 		priority 1, so below the priority of the sender tasks. */
-		// xTaskCreate( vReceiverTask, "Display", 600, NULL, 1, NULL );
+		 xTaskCreate( vDisplayTask, "Display", 600, NULL, 1, NULL );
 
 		/* Create the ADXL task. */
 		xTaskCreate( vADXLTask,		/* Pointer to the function that implements the task. */

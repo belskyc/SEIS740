@@ -11,6 +11,9 @@
 #include "irSensors.h"
 
 extern xQueueHandle xDisplayQueue;
+extern dispReq DisplayRequests[];
+
+static uint8_t IR_IRQ_errors[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void
 IR_IRQ_handler_1_1()
@@ -130,5 +133,5 @@ IR_IRQ_handler_2_4()
 int
 IR_init()
 {
-
+    return 0;
 }

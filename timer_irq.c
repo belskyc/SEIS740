@@ -30,17 +30,6 @@ void TIMER0_IRQHandler (void)
 	LPC_TIM0->IR = 1;	  // CLEAR interrupt flag.
 	timer0_counter++;	  // Increment the external counter.
 
-#if 1
-	portBASE_TYPE nQStatus;
-    // copy the timer value
-	DisplayRequests[IR_ID_1_1].tVal = timer0_counter;
-	// Enqueue the Request
-	if (8 > timer0_counter)
-	{
-	    nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_ID_1_1], 0);
-	}
-#endif
-
 	leds_invert(GPIOP019);	// Toggle the LED state.
 	leds_invert(LED2);	    // Toggle the LED state.
 	return;
