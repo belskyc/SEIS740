@@ -156,6 +156,8 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 {
 	uint8_t i = 0;
 	uint8_t k = 0;
+
+	taskENTER_CRITICAL();
 	// Wait for 2 timer events to ensure one full timer period has elapsed.
 	for(i = 0; i < 2; i++)
 	{
@@ -170,28 +172,21 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 	    	LPC_GPIO1->FIOCLR |= GPIO_P1_29;  // ENABLE the 7SegDisp.
 	    	break;
 	    case DISP_2_1:
-	    	return;
 	    	break;
 	    case DISP_1_2:
-	    	return;
 	    	break;
 	    case DISP_2_2:
-	    	return;
 	    	break;
 	    case DISP_1_3:
-	    	return;
 	        break;
 	    case DISP_2_3:
-	    	return;
 	    	break;
 	    case DISP_1_4:
-	    	return;
 	    	break;
 	    case DISP_2_4:
-	    	return;
 	    	break;
 	    default:
-	        return;
+			__NOP;  // Do nothing.
 	}
 
 	if(bit) // Push "1" bit
@@ -218,6 +213,7 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 	}
 
 	LPC_GPIO1->FIOSET |= GPIO_P1_26;  // RISING-EDGE the CLOCK to the 7SegDisp.
+	taskEXIT_CRITICAL();
 
 	return;
 }
