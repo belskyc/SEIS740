@@ -196,15 +196,17 @@ int main( void )
 
 		/* Create the task that will read from the queue.  The task is created with
 		priority 1, so below the priority of the sender tasks. */
-		 xTaskCreate( vDisplayTask, "Display", 600, NULL, 1, NULL );
+		xTaskCreate( vDisplayTask, "Display", 600, NULL, 1, NULL );
 
-		/* Create the ADXL task. */
-		xTaskCreate( vADXLTask,		/* Pointer to the function that implements the task. */
-					 "ADXL Task",	/* Text name for the task.  This is to facilitate debugging only. */
-					 1024,			/* Stack depth in words. */
-					 NULL,			/* We are not using the task parameter. */
-					 1,				/* This task will run at priority 1. */
-					 NULL );		/* We are not using the task handle. */
+		/*
+		// Create the ADXL task.
+		xTaskCreate( vADXLTask,		// Pointer to the function that implements the task.
+					 "ADXL Task",	// Text name for the task.  This is to facilitate debugging only.
+					 1024,			// Stack depth in words.
+					 NULL,			// We are not using the task parameter.
+					 1,				// This task will run at priority 1.
+					 NULL );		// We are not using the task handle.
+		 */
 
 		/* Create the UART task */
 		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );
@@ -248,7 +250,8 @@ void vApplicationMallocFailedHook( void )
 {
 	/* This function will only be called if an API call to create a task, queue
 	or semaphore fails because there is too little heap RAM remaining. */
-	for( ;; );
+	for( ;; )
+		printf("FAILED: fell into vApplicationMallocFailedHook()!\n");
 }
 /*-----------------------------------------------------------*/
 
@@ -257,7 +260,8 @@ void vApplicationStackOverflowHook( xTaskHandle *pxTask, signed char *pcTaskName
 	/* This function will only be called if a task overflows its stack.  Note
 	that stack overflow checking does slow down the context switch
 	implementation. */
-	for( ;; );
+	for( ;; )
+		printf("FAILED: fell into vApplicationStackOverflowHook()!\n");
 }
 /*-----------------------------------------------------------*/
 
