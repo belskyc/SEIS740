@@ -156,6 +156,7 @@ int main( void )
 	IR_init();
 
     /* The queue is created to hold a maximum of 8 structures of type xDisplayQueue. */
+	printf("sizeof(dispReq) = %d\n", sizeof(dispReq));
 	xDisplayQueue = xQueueCreate( 8, sizeof( dispReq ) );
 
 	timer0_counter = 0; // Clear the counter used for the 7-segment display.
@@ -226,6 +227,14 @@ int main( void )
 		NVIC_DisableIRQ( EINT2_IRQn );
 		NVIC_DisableIRQ( EINT3_IRQn );
 		setupHardware();  // Write all registers to to ADXL345 to setup its configuration.
+		NVIC_ClearPendingIRQ( EINT0_IRQn );
+		LPC_SC->EXTINT |= 0x01;
+		NVIC_ClearPendingIRQ( EINT1_IRQn );
+		LPC_SC->EXTINT |= 0x02;
+		NVIC_ClearPendingIRQ( EINT2_IRQn );
+		LPC_SC->EXTINT |= 0x04;
+		NVIC_ClearPendingIRQ( EINT3_IRQn );
+		LPC_SC->EXTINT |= 0x08;
 		// Only enable the external interrupts after HW has been configured.
 		NVIC_EnableIRQ( EINT0_IRQn );
 		NVIC_EnableIRQ( EINT1_IRQn );

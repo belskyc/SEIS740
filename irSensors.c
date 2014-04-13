@@ -12,8 +12,7 @@
 
 extern xQueueHandle xDisplayQueue;
 extern dispReq DisplayRequests[];
-
-static uint8_t IR_IRQ_errors[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+extern uint8_t IR_IRQ_errors[];
 
 void
 IR_IRQ_handler_1_1()
@@ -133,5 +132,14 @@ IR_IRQ_handler_2_4()
 int
 IR_init()
 {
+
+	// Multiplexer GPIO
+	// GPIO on P2.0 and P2.1
+	LPC_PINCON->PINSEL2 &= (~0x0000000f);
+	// GPIO on P2.0 and P2.1 as output
+	LPC_GPIO2->FIODIR0 |= (0x03);
+    // Set P2.0 and P2.1 to output 0
+    LPC_GPIO2->FIOCLR0 |= (0x03);
+
     return 0;
 }
