@@ -213,15 +213,15 @@ void EINT2_IRQHandler(void)
 	// Put the timer value on the queue from the appropriate IR sensor
 	portBASE_TYPE nQStatus;
     // copy the timer value
-	DisplayRequests[IR_LANE1_ID].tVal = timer0_counter;
+	DisplayRequests[IR_LANE2_ID].tVal = timer0_counter;
 	// Enqueue the Request
-	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE1_ID], &xHigherPriorityTaskWoken);
+	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE2_ID], &xHigherPriorityTaskWoken);
 	if (nQStatus != pdPASS)
 	{
-		IR_IRQ_errors[IR_LANE1_ID] = 1;
+		IR_IRQ_errors[IR_LANE2_ID] = 1;
 	}
 
-	IR_LANE1_ID++;
+	IR_LANE2_ID++;
 	MUX_IR_index++;
 
 	// Advance the MUX
@@ -273,12 +273,31 @@ void EINT3_Init()
 void EINT3_IRQHandler(void)
 {
 	printf("Entered EINT3_IRQHandler()...\n");
-	uint8_t k = 0;
 
-	// portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	static uint8_t MUX_IR_index = 0;
+	junkEINT3++;  // DEBUG variable.
+	printf("Entered EINT2_IRQHandler()... junkEINT2 = %d\n", junkEINT3);
 
-	// Give Semaphore to trigger the ADXL task to process the ADXL reading.
-	// xSemaphoreGiveFromISR( xADXLActiveSemaphore, &xHigherPriorityTaskWoken );
+	// Put the timer value on the queue from the appropriate IR sensor
+	portBASE_TYPE nQStatus;
+    // copy the timer value
+	DisplayRequests[IR_LANE2_ID].tVal = timer0_counter;
+	// Enqueue the Request
+	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE2_ID], &xHigherPriorityTaskWoken);
+	if (nQStatus != pdPASS)
+	{
+		IR_IRQ_errors[IR_LANE2_ID] = 1;
+	}
+
+	IR_LANE2_ID++;
+	MUX_IR_index++;
+
+	// Advance the MUX
+    // Set P2.0 and P2.1 to output 0
+    LPC_GPIO2->FIOCLR0 |= (0x0c);
+    LPC_GPIO2->FIOSET0 |= ((MUX_IR_index << 2) & 0x0C);
+
 
 	/************************************************************************/
 	/* Clear the software interrupt bit using the interrupt controllers
@@ -286,20 +305,6 @@ void EINT3_IRQHandler(void)
 	NVIC_ClearPendingIRQ( EINT3_IRQn );
 	LPC_SC->EXTINT |= 0x08;
 	/************************************************************************/
-
-	junkEINT3++;  // DEBUG variable.
-
-	/* Giving the semaphore may have unblocked a task - if it did and the
-	unblocked task has a priority equal to or above the currently executing
-	task then xHigherPriorityTaskWoken will have been set to pdTRUE and
-	portEND_SWITCHING_ISR() will force a context switch to the newly unblocked
-	higher priority task.
-
-	NOTE: The syntax for forcing a context switch within an ISR varies between
-	FreeRTOS ports.  The portEND_SWITCHING_ISR() macro is provided as part of
-	the Cortex-M3 port layer for this purpose.  taskYIELD() must never be called
-	from an ISR! */
-	//portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 
 	return;
 }

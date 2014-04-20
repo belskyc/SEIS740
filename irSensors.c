@@ -133,13 +133,21 @@ int
 IR_init()
 {
 
-	// Multiplexer GPIO
+	// Multiplexer GPIO for lane 1
 	// GPIO on P2.0 and P2.1
-	LPC_PINCON->PINSEL2 &= (~0x0000000f);
+	LPC_PINCON->PINSEL4 &= (~0x0000000f);  // previously set to PINSEL2, but that's not P2.0 & P2.1
 	// GPIO on P2.0 and P2.1 as output
 	LPC_GPIO2->FIODIR0 |= (0x03);
     // Set P2.0 and P2.1 to output 0
     LPC_GPIO2->FIOCLR0 |= (0x03);
+
+    // Multiplexer GPIO for lane 2
+	// GPIO on P2.2 and P2.3
+	LPC_PINCON->PINSEL4 &= (~0x000000f0);
+	// GPIO on P2.2 and P2.3 as output
+	LPC_GPIO2->FIODIR0 |= (0x0c);
+    // Set P2.2 and P2.3 to output 0
+    LPC_GPIO2->FIOCLR0 |= (0x0c);
 
     return 0;
 }

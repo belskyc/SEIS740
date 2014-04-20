@@ -29,6 +29,12 @@
 #define GPIO_P0_20 (1 << 20)  // GPIO P0[20]
 #define GPIO_P0_19 (1 << 19)  // GPIO P0[19]
 #define GPIO_P0_18 (1 << 18)  // GPIO P0[18]
+
+#define GPIO_P1_19 (1 << 19)
+#define GPIO_P1_20 (1 << 20)
+#define GPIO_P1_21 (1 << 21)
+#define GPIO_P1_22 (1 << 22)
+#define GPIO_P1_23 (1 << 23)
 #define GPIO_P1_24 (1 << 24)  // USM0
 #define GPIO_P1_25 (1 << 25)  // USM1
 #define GPIO_P1_26 (1 << 26)  // STEP
