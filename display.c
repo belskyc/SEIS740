@@ -455,6 +455,15 @@ Display_init(void)
 
 	/* ***************************************************************** */
 
+	LPC_GPIO1->FIOSET |= GPIO_P1_19;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_23;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_20;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_24;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_21;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_25;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_22;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_26;  // DISABLE the 7SegDisp.
+
 	__NOP;
 }
 
