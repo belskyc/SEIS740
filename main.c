@@ -48,6 +48,8 @@ int ControlCounter = 0;
 int NVIC_TIMER1_IRQ_State = 0;
 char s[10];
 
+uint8_t MUX_IR_index2 = 0;
+
 /* Declare a variable of type xSemaphoreHandle.  This is used to reference the
 semaphore that is used to synchronize a task with an interrupt. */
 xSemaphoreHandle xCountingSemaphore;

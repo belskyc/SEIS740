@@ -23,6 +23,7 @@ extern xSemaphoreHandle xCountingSemaphore;    // Used in EINT1 handling ADXL345
 extern xSemaphoreHandle xADXLActiveSemaphore;  // Used in EINT0 handling ADXL345 "Active" interrupts.
 extern xQueueHandle xDisplayQueue;
 extern dispReq DisplayRequests[];
+extern uint8_t MUX_IR_index2;
 
 uint8_t IR_IRQ_errors[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -206,7 +207,6 @@ void EINT2_Init()
 void EINT2_IRQHandler(void)
 {
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-	static uint8_t MUX_IR_index = 0;
 	junkEINT2++;  // DEBUG variable.
 	printf("Entered EINT2_IRQHandler()... junkEINT2 = %d\n", junkEINT2);
 
@@ -222,12 +222,12 @@ void EINT2_IRQHandler(void)
 	}
 
 	IR_LANE2_ID++;
-	MUX_IR_index++;
+	MUX_IR_index2++;
 
 	// Advance the MUX
     // Set P2.0 and P2.1 to output 0
     LPC_GPIO2->FIOCLR0 |= (0x03);
-    LPC_GPIO2->FIOSET0 |= (MUX_IR_index & 0x03);
+    LPC_GPIO2->FIOSET0 |= (MUX_IR_index2 & 0x03);
 
 
 	/************************************************************************/

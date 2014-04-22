@@ -22,6 +22,7 @@
 #include "irSensors.h"
 #include "timer.h"
 
+extern uint8_t MUX_IR_index2;
 
 #if 1
 void vSenderTask( void *pvParameters )
@@ -54,6 +55,7 @@ void vSenderTask( void *pvParameters )
 	        //short_delay(300);
 
 		    // copy the timer value
+#if 0
 	        uint32_t tval = timer0_counter;
 			DisplayRequests[IR_IDX_1_1].tVal = timer0_counter;
 			vPrintString( "Button press event detected\n" );
@@ -82,8 +84,10 @@ void vSenderTask( void *pvParameters )
 			    as soon as both sending tasks are in the Blocked state. */
 			    vPrintString( "Could not send to the queue.\n" );
 		    }
+#endif
 
 		    buttonPressEvent = 0;
+		    MUX_IR_index2 = 0;
 
 		}
 
