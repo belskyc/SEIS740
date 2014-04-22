@@ -1,10 +1,18 @@
-//
+/*
+ * SEIS-740, Spring 2014, Real-Time-Systems
+ * Class Project
+ * Chris Belsky & Jeff Hatch
+ *
+ * NXP LPC1769 uC running FreeRTOS - 7 Segment Display Utilities
+*/
 
 #include "stdio.h"
 
 #include "LPC17xx.h"
 #include "FreeRTOS.h"
 #include "task.h"
+// FreeRTOS Demo includes.
+#include "basic_io.h"
 
 #include "display.h"
 #include "timer.h"
@@ -166,6 +174,7 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 			__NOP;  // Do nothing while waiting for timer event.
 	}
 
+#if 0
 	switch(dispID)
 	{
 	    case DISP_1_1:
@@ -196,6 +205,7 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 	    default:
 			__NOP;  // Do nothing.
 	}
+#endif
 
 	if(bit) // Push "1" bit
 	{
@@ -236,9 +246,41 @@ display(uint32_t id,
 	uint8_t i = 0;
 	uint8_t k = 0;
 
+	vPrintStringAndNumber("display id", id);
+
 	// 36 total bits to push out to the 7-Segment Display.
 
-	vPrintStringAndNumber("display id", id);
+	// First, enable the desired 7-segment display:
+	switch(id)
+	{
+		case DISP_1_1:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_19;  // ENABLE the 7SegDisp (PAD2)
+			break;
+		case DISP_2_1:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_23;  // ENABLE the 7SegDisp (PAD6)
+			break;
+		case DISP_1_2:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_20;  // ENABLE the 7SegDisp (PAD3)
+			break;
+		case DISP_2_2:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_24;  // ENABLE the 7SegDisp (PAD7)
+			break;
+		case DISP_1_3:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_21;  // ENABLE the 7SegDisp (PAD4)
+			break;
+		case DISP_2_3:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_25;  // ENABLE the 7SegDisp (PAD8)
+			break;
+		case DISP_1_4:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_22;  // ENABLE the 7SegDisp (PAD5)
+			break;
+		case DISP_2_4:
+			LPC_GPIO1->FIOCLR |= GPIO_P1_26;  // ENABLE the 7SegDisp (PAD9)
+			break;
+		default:
+			__NOP;  // Do nothing.
+	}
+
 	pushBit(1, id); // Push a START-bit (bit-1).
 	//vPrintStringAndNumber("pushing bit", 1);
 
@@ -285,10 +327,10 @@ display(uint32_t id,
 	//LPC_GPIO1->FIOCLR |= GPIO_P1_26;  // FALLING-EDGE the CLOCK to the 7SegDisp.
 	LPC_GPIO1->FIOCLR |= GPIO_P1_29;  // FALLING-EDGE the CLOCK to the 7SegDisp.
 
+	// Done pushing all bits to the 7-seg display, so DISABLE it:
 	switch(id)
 	{
 	    case DISP_1_1:
-	    	//LPC_GPIO1->FIOSET |= GPIO_P1_29;  // DISABLE the 7SegDisp.
 	    	LPC_GPIO1->FIOSET |= GPIO_P1_19;  // DISABLE the 7SegDisp.
 	    	break;
 	    case DISP_2_1:
