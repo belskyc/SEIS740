@@ -22,13 +22,15 @@
 #include "irSensors.h"
 #include "timer.h"
 #include "display.h"
+#include "ADXL345_init.h"
 
 extern uint8_t MUX_IR_index2;
 
 #if 1
 void vSenderTask( void *pvParameters )
 {
-    portBASE_TYPE xStatus;
+	uint8_t k = 0;
+	portBASE_TYPE xStatus;
     const portTickType xTicksToWait = 100 / portTICK_RATE_MS;
 
     int GPIO0state = 0;
@@ -90,6 +92,9 @@ void vSenderTask( void *pvParameters )
 		    vPrintString( "Button press event detected\n" );
 		    buttonPressEvent = 0;
 		    MUX_IR_index2 = 0;
+		    k = readADXL345(REG_INT_SOURCE);
+			// printf("EINT1: REG_INT_SOURCE = %x\n", k);
+
 		    // Clear the displays
 		    Display_displayNumber(11, 100000000, 0, 0);
 		    Display_displayNumber(12, 100000000, 0, 0);
