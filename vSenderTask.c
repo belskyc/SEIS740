@@ -21,6 +21,7 @@
 #include "externs.h"
 #include "irSensors.h"
 #include "timer.h"
+#include "display.h"
 
 extern uint8_t MUX_IR_index2;
 
@@ -86,8 +87,18 @@ void vSenderTask( void *pvParameters )
 		    }
 #endif
 
+		    vPrintString( "Button press event detected\n" );
 		    buttonPressEvent = 0;
 		    MUX_IR_index2 = 0;
+		    // Clear the displays
+		    Display_displayNumber(11, 100000000, 0, 0);
+		    Display_displayNumber(12, 100000000, 0, 0);
+		    Display_displayNumber(13, 100000000, 0, 0);
+		    Display_displayNumber(14, 100000000, 0, 0);
+		    Display_displayNumber(21, 100000000, 0, 0);
+		    Display_displayNumber(22, 100000000, 0, 0);
+		    Display_displayNumber(23, 100000000, 0, 0);
+		    Display_displayNumber(24, 100000000, 0, 0);
 
 		}
 

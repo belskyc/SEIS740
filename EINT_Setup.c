@@ -224,6 +224,12 @@ void EINT2_IRQHandler(void)
 	IR_LANE2_ID++;
 	MUX_IR_index2++;
 
+	if (IR_LANE2_ID > IR_ID_2_4)
+	{
+		IR_LANE2_ID = IR_ID_2_1;
+		MUX_IR_index2 = 0;
+	}
+
 	// Advance the MUX
     // Set P2.0 and P2.1 to output 0
     LPC_GPIO2->FIOCLR0 |= (0x03);
