@@ -161,8 +161,8 @@ int main( void )
 	printf("sizeof(dispReq) = %d\n", sizeof(dispReq));
 	xDisplayQueue = xQueueCreate( 8, sizeof( dispReq ) );
 
-	timer0_counter = 0; // Clear the counter used for the 7-segment display.
-	init_timer( 0, TIMER0_INTERVAL );  // Used to drive queue
+	timer0_counter = 0; // Timer to compare against reference for display values
+	init_timer( 0, TIMER0_INTERVAL );  // Used to derive times for display
 	enable_timer(0);
 
 	timer1_counter = 0; // Clear the counter used for the 7-segment display.
@@ -220,8 +220,10 @@ int main( void )
 		/* Create the UART task */
 		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );
 
+#if 0
 		/* Create the ADXL345 "Active" interrupt task */
 		xTaskCreate( vADXLActiveTask, "ADXL Active Task", 512, NULL, 1, NULL );
+#endif
 
 		// Disable the External interrupts to the ADXL while setting up HW.
 		NVIC_DisableIRQ( EINT0_IRQn );
@@ -238,7 +240,7 @@ int main( void )
 		NVIC_ClearPendingIRQ( EINT3_IRQn );
 		LPC_SC->EXTINT |= 0x08;
 		// Only enable the external interrupts after HW has been configured.
-		NVIC_EnableIRQ( EINT0_IRQn );
+//		NVIC_EnableIRQ( EINT0_IRQn );
 		NVIC_EnableIRQ( EINT1_IRQn );
 		NVIC_EnableIRQ( EINT2_IRQn );
 		// NVIC_EnableIRQ( EINT3_IRQn );

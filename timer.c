@@ -11,6 +11,8 @@
 #include "LPC17xx.h"
 #include "timer.h"
 
+uint32_t timer0_reference = 0;
+
 // External Timer Variables.
 volatile uint32_t timer0_counter = 0;
 volatile uint32_t timer1_counter = 0;

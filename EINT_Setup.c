@@ -74,10 +74,11 @@ void EINT0_IRQHandler(void)
 	printf("Entered EINT0_IRQHandler()...\n");
 	uint8_t k = 0;
 
-	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	timer0_reference = timer0_counter;
+	//portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
 	// Give Semaphore to trigger the ADXL task to process the ADXL reading.
-	xSemaphoreGiveFromISR( xADXLActiveSemaphore, &xHigherPriorityTaskWoken );
+	//xSemaphoreGiveFromISR( xADXLActiveSemaphore, &xHigherPriorityTaskWoken );
 
 	/************************************************************************/
 	/* Clear the software interrupt bit using the interrupt controllers
@@ -86,11 +87,11 @@ void EINT0_IRQHandler(void)
 	LPC_SC->EXTINT |= 0x01;
 	/************************************************************************/
 	// Clear the Activity Interrupt by reading the INT_SOURCE register from the ADXL345.
-	k = readADXL345(REG_INT_SOURCE);
-	printf("EINT0: REG_INT_SOURCE = %x\n", k);
+	//k = readADXL345(REG_INT_SOURCE);
+	//printf("EINT0: REG_INT_SOURCE = %x\n", k);
 	/************************************************************************/
 
-	junkEINT0++;  // DEBUG variable.
+	//junkEINT0++;  // DEBUG variable.
 
 	/* Giving the semaphore may have unblocked a task - if it did and the
 	unblocked task has a priority equal to or above the currently executing
@@ -102,7 +103,7 @@ void EINT0_IRQHandler(void)
 	FreeRTOS ports.  The portEND_SWITCHING_ISR() macro is provided as part of
 	the Cortex-M3 port layer for this purpose.  taskYIELD() must never be called
 	from an ISR! */
-	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+	//portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 
 	return;
 }
@@ -141,12 +142,13 @@ void EINT1_Init()
 void EINT1_IRQHandler(void)
 {
 	// printf("Entered EINT1_IRQHandler().\n;");
-	//uint8_t k = 0;
+	uint8_t k = 0;
 
-	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+	timer0_reference = timer0_counter;
+	//portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
 	// Give Semaphore to trigger the ADXL task to process the ADXL reading.
-	xSemaphoreGiveFromISR( xCountingSemaphore, &xHigherPriorityTaskWoken );
+	//xSemaphoreGiveFromISR( xCountingSemaphore, &xHigherPriorityTaskWoken );
 
 	/************************************************************************/
 	/* Clear the software interrupt bit using the interrupt controllers
@@ -169,7 +171,7 @@ void EINT1_IRQHandler(void)
 	FreeRTOS ports.  The portEND_SWITCHING_ISR() macro is provided as part of
 	the Cortex-M3 port layer for this purpose.  taskYIELD() must never be called
 	from an ISR! */
-	portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
+	//portEND_SWITCHING_ISR( xHigherPriorityTaskWoken );
 
 	return;
 }
@@ -213,7 +215,7 @@ void EINT2_IRQHandler(void)
 	// Put the timer value on the queue from the appropriate IR sensor
 	portBASE_TYPE nQStatus;
     // copy the timer value
-	DisplayRequests[IR_LANE2_ID].tVal = timer0_counter;
+	DisplayRequests[IR_LANE2_ID].tVal = timer0_counter - timer0_reference;
 	// Enqueue the Request
 	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE2_ID], &xHigherPriorityTaskWoken);
 	if (nQStatus != pdPASS)

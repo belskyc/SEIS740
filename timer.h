@@ -41,6 +41,8 @@
 #define GPIO_P1_29 (1 << 29)  // DIR
 #define GPIO_P1_28 (1 << 28)  // ENABLEn
 
+extern uint32_t timer0_reference;
+
 extern volatile uint32_t timer0_counter;
 extern volatile uint32_t timer1_counter;
 extern volatile uint32_t timer2_counter;
