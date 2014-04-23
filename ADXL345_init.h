@@ -88,7 +88,8 @@
  //#define INIT_INT_ENABLE	0x12	// Interrupt enable Watermark, Activity
  #define INIT_INT_ENABLE	0x10	// Interrupt enable Activity
 
- #define INIT_INT_MAP		0x02	// Interrupt mapping Watermark -> interrupt pin INT2; all others -> pin INT1
+// #define INIT_INT_MAP		0x02	// Interrupt mapping Watermark -> interrupt pin INT2; all others -> pin INT1
+ #define INIT_INT_MAP		0x10	// Interrupt mapping Activity -> interrupt pin INT2; all others -> pin INT1
  //#define INIT_INT_SOURCE	0x00	// Source of interrupts.  Read-Only
  #define INIT_INT_SOURCE	0x00	// Source of interrupts.  Read-Only
  //#define INIT_DATA_FORMAT	0x0C	// Data format control, SPI, Active HIGH, Full Res, Justify, +/- 2g
