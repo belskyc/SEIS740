@@ -22,8 +22,10 @@
 extern xSemaphoreHandle xCountingSemaphore;    // Used in EINT1 handling ADXL345 readings.
 extern xSemaphoreHandle xADXLActiveSemaphore;  // Used in EINT0 handling ADXL345 "Active" interrupts.
 extern xQueueHandle xDisplayQueue;
+extern xQueueHandle xUARTQueue;
 extern dispReq DisplayRequests[];
 extern uint8_t MUX_IR_index2;
+extern uint8_t MUX_IR_index1;
 
 uint8_t IR_IRQ_errors[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -222,6 +224,11 @@ void EINT2_IRQHandler(void)
 	{
 		IR_IRQ_errors[IR_LANE2_ID] = 1;
 	}
+	nQStatus = xQueueSendToBackFromISR(xUARTQueue, &DisplayRequests[IR_LANE2_ID], &xHigherPriorityTaskWoken);
+	if (nQStatus != pdPASS)
+	{
+		IR_IRQ_errors[IR_LANE2_ID] = 1;
+	}
 
 	IR_LANE2_ID++;
 	MUX_IR_index2++;
@@ -280,31 +287,39 @@ void EINT3_Init()
 // EINT3 ISR
 void EINT3_IRQHandler(void)
 {
-	printf("Entered EINT3_IRQHandler()...\n");
-
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-	static uint8_t MUX_IR_index = 0;
 	junkEINT3++;  // DEBUG variable.
-	printf("Entered EINT2_IRQHandler()... junkEINT2 = %d\n", junkEINT3);
+	printf("Entered EINT3_IRQHandler()... junkEINT3 = %d\n", junkEINT3);
 
 	// Put the timer value on the queue from the appropriate IR sensor
 	portBASE_TYPE nQStatus;
     // copy the timer value
-	DisplayRequests[IR_LANE2_ID].tVal = timer0_counter;
+	DisplayRequests[IR_LANE1_ID].tVal = timer0_counter;
 	// Enqueue the Request
-	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE2_ID], &xHigherPriorityTaskWoken);
+	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE1_ID], &xHigherPriorityTaskWoken);
 	if (nQStatus != pdPASS)
 	{
-		IR_IRQ_errors[IR_LANE2_ID] = 1;
+		IR_IRQ_errors[IR_LANE1_ID] = 1;
+	}
+	nQStatus = xQueueSendToBackFromISR(xUARTQueue, &DisplayRequests[IR_LANE1_ID], &xHigherPriorityTaskWoken);
+	if (nQStatus != pdPASS)
+	{
+		IR_IRQ_errors[IR_LANE1_ID] = 1;
 	}
 
-	IR_LANE2_ID++;
-	MUX_IR_index++;
+	IR_LANE1_ID++;
+	MUX_IR_index1++;
+
+	if (IR_LANE1_ID > IR_ID_1_4)
+	{
+		IR_LANE1_ID = IR_ID_1_1;
+		MUX_IR_index1 = 0;
+	}
 
 	// Advance the MUX
-    // Set P2.0 and P2.1 to output 0
+    // Set P2.2 and P2.3 to output 0
     LPC_GPIO2->FIOCLR0 |= (0x0c);
-    LPC_GPIO2->FIOSET0 |= ((MUX_IR_index << 2) & 0x0C);
+    LPC_GPIO2->FIOSET0 |= ((MUX_IR_index1 << 2) & 0x0C);
 
 
 	/************************************************************************/

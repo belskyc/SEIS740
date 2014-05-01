@@ -49,6 +49,7 @@ int NVIC_TIMER1_IRQ_State = 0;
 char s[10];
 
 uint8_t MUX_IR_index2 = 0;
+uint8_t MUX_IR_index1 = 0;
 
 /* Declare a variable of type xSemaphoreHandle.  This is used to reference the
 semaphore that is used to synchronize a task with an interrupt. */
@@ -63,6 +64,11 @@ xSemaphoreHandle xADXLActiveSemaphore;
 /* Declare a variable of type xQueueHandle.  This is used to store the queue
 that is accessed by IR sensor interrupt handlers and the Display task */
 xQueueHandle xDisplayQueue;
+
+/* Declare a queue for handling the UART output from the EINT handlers to the
+ * UART task
+ */
+xQueueHandle xUARTQueue;
 
 /* Array of display requests for each IR handler.  This is used to
  * pass from the IR sensor interrupt handler into the queue and then
@@ -160,6 +166,7 @@ int main( void )
     /* The queue is created to hold a maximum of 8 structures of type xDisplayQueue. */
 	printf("sizeof(dispReq) = %d\n", sizeof(dispReq));
 	xDisplayQueue = xQueueCreate( 8, sizeof( dispReq ) );
+	xUARTQueue = xQueueCreate(8, sizeof(dispReq));
 
 	timer0_counter = 0; // Timer to compare against reference for display values
 	init_timer( 0, TIMER0_INTERVAL );  // Used to derive times for display
@@ -218,7 +225,7 @@ int main( void )
 #endif
 
 		/* Create the UART task */
-		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 1, NULL );
+		//xTaskCreate( vUARTTask, "UART Task", 512, NULL, 2, NULL );
 
 #if 0
 		/* Create the ADXL345 "Active" interrupt task */
@@ -243,7 +250,7 @@ int main( void )
 //		NVIC_EnableIRQ( EINT0_IRQn );
 		NVIC_EnableIRQ( EINT1_IRQn );
 		NVIC_EnableIRQ( EINT2_IRQn );
-		// NVIC_EnableIRQ( EINT3_IRQn );
+	    NVIC_EnableIRQ( EINT3_IRQn );
 
 		/* Start the scheduler so the created tasks start executing. */
 		vTaskStartScheduler();

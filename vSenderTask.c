@@ -23,6 +23,7 @@
 #include "timer.h"
 #include "display.h"
 
+extern uint8_t MUX_IR_index1;
 extern uint8_t MUX_IR_index2;
 
 #if 1
@@ -90,6 +91,9 @@ void vSenderTask( void *pvParameters )
 		    vPrintString( "Button press event detected\n" );
 		    buttonPressEvent = 0;
 		    MUX_IR_index2 = 0;
+		    MUX_IR_index1 = 0;
+		    LPC_GPIO2->FIOCLR0 |= (0x0f);
+		    timer0_reference = timer0_counter;
 		    // Clear the displays
 		    Display_displayNumber(11, 100000000, 0, 0);
 		    Display_displayNumber(12, 100000000, 0, 0);

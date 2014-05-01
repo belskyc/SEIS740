@@ -61,13 +61,13 @@ void vDisplayTask( void *pvParameters )
 		task should remain in the Blocked state to wait for data to be available 
 		should the queue already be empty.  A block time is not necessary as this
 		task will only run when the queue is full so data will always be available. */
-		vPrintString("vDisplayTask checking queue");
+		//vPrintString("vDisplayTask checking queue");
 		xStatus = xQueueReceive( xDisplayQueue, &xReceivedRequest, portMAX_DELAY );
 
 		if( xStatus == pdPASS )
 		{
-			vPrintStringAndNumber("Display Request received from ", xReceivedRequest.irID);
-			vPrintStringAndNumber("Display Request timer value ", xReceivedRequest.tVal);
+			//vPrintStringAndNumber("Display Request received from ", xReceivedRequest.irID);
+			//vPrintStringAndNumber("Display Request timer value ", xReceivedRequest.tVal);
 
 			Display_displayNumber(xReceivedRequest.irID, xReceivedRequest.tVal, 0, 0);
 		}
