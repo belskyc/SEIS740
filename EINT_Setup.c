@@ -128,7 +128,9 @@ void EINT1_Init()
 	LPC_SC->EXTMODE |= (0x1 << 1);  // Only do this when the NVIC is disabled
 
 	// Set to interrupt on RISING edge (vs. FALLING edge)
-	LPC_SC->EXTPOLAR |= (0x1 << 1);
+	// LPC_SC->EXTPOLAR |= (0x1 << 1);
+	// Set to interrupt on FALLING edge (vs. RISING edge)
+	LPC_SC->EXTPOLAR &= ~(0x1 << 1);
 
 	/* The interrupt service routine uses an (interrupt safe) FreeRTOS API
 	function so the interrupt priority must be at or below the priority defined
@@ -143,7 +145,7 @@ void EINT1_Init()
 // EINT1 ISR
 void EINT1_IRQHandler(void)
 {
-	// printf("Entered EINT1_IRQHandler().\n;");
+	printf("Entered EINT1_IRQHandler().\n;");
 	uint8_t k = 0;
 
 	timer0_reference = timer0_counter;
@@ -212,7 +214,7 @@ void EINT2_IRQHandler(void)
 {
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	junkEINT2++;  // DEBUG variable.
-	printf("Entered EINT2_IRQHandler()... junkEINT2 = %d\n", junkEINT2);
+	//printf("Entered EINT2_IRQHandler()... junkEINT2 = %d\n", junkEINT2);
 
 	// Put the timer value on the queue from the appropriate IR sensor
 	portBASE_TYPE nQStatus;
@@ -289,12 +291,12 @@ void EINT3_IRQHandler(void)
 {
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	junkEINT3++;  // DEBUG variable.
-	printf("Entered EINT3_IRQHandler()... junkEINT3 = %d\n", junkEINT3);
+	//printf("Entered EINT3_IRQHandler()... junkEINT3 = %d\n", junkEINT3);
 
 	// Put the timer value on the queue from the appropriate IR sensor
 	portBASE_TYPE nQStatus;
     // copy the timer value
-	DisplayRequests[IR_LANE1_ID].tVal = timer0_counter;
+	DisplayRequests[IR_LANE1_ID].tVal = timer0_counter - timer0_reference;
 	// Enqueue the Request
 	nQStatus = xQueueSendToBackFromISR(xDisplayQueue, &DisplayRequests[IR_LANE1_ID], &xHigherPriorityTaskWoken);
 	if (nQStatus != pdPASS)

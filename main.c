@@ -165,7 +165,7 @@ int main( void )
 
     /* The queue is created to hold a maximum of 8 structures of type xDisplayQueue. */
 	printf("sizeof(dispReq) = %d\n", sizeof(dispReq));
-	xDisplayQueue = xQueueCreate( 8, sizeof( dispReq ) );
+	xDisplayQueue = xQueueCreate( 16, sizeof( dispReq ) );
 	xUARTQueue = xQueueCreate(8, sizeof(dispReq));
 
 	timer0_counter = 0; // Timer to compare against reference for display values
