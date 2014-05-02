@@ -132,7 +132,6 @@ IR_IRQ_handler_2_4()
 int
 IR_init()
 {
-
 	// Multiplexer GPIO for lane 1
 	// GPIO on P2.0 and P2.1
 	LPC_PINCON->PINSEL4 &= (~0x0000000f);  // previously set to PINSEL2, but that's not P2.0 & P2.1

@@ -154,7 +154,6 @@ create_display_val(unsigned int timerVal)
 		{
 		    dsBits |= numbers[digits[j]];
 		}
-
 	}
 	
 	return dsBits;
@@ -173,39 +172,6 @@ void pushBit(const uint32_t bit, const uint8_t dispID)
 		while(!timer1_runStatus)
 			__NOP;  // Do nothing while waiting for timer event.
 	}
-
-#if 0
-	switch(dispID)
-	{
-	    case DISP_1_1:
-	    	//LPC_GPIO1->FIOCLR |= GPIO_P1_29;  // ENABLE the 7SegDisp.
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_19;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_2_1:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_23;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_1_2:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_20;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_2_2:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_24;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_1_3:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_21;  // ENABLE the 7SegDisp.
-	        break;
-	    case DISP_2_3:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_25;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_1_4:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_22;  // ENABLE the 7SegDisp.
-	    	break;
-	    case DISP_2_4:
-	    	LPC_GPIO1->FIOCLR |= GPIO_P1_26;  // ENABLE the 7SegDisp.
-	    	break;
-	    default:
-			__NOP;  // Do nothing.
-	}
-#endif
 
 	if(bit) // Push "1" bit
 	{
@@ -246,7 +212,8 @@ display(uint32_t id,
 	uint8_t i = 0;
 	uint8_t k = 0;
 
-	vPrintStringAndNumber("display id", id);
+	vPrintStringAndNumber("display id = ", id);
+	// vPrintStringAndNumber("time = ", val);
 
 	// 36 total bits to push out to the 7-Segment Display.
 
@@ -365,103 +332,59 @@ void
 Display_init(void)
 {
 	// Configuration for the LPC1769 board:
-	// int tempInt1, tempInt2;
-#if 0
-	// Set P0_19 to value '00' - GPIO:  Used for CLOCK of 7-Segment Display.
-	// LPC_PINCON->PINSEL1	&= (~0x000000C0);
-	LPC_PINCON->PINSEL1	&= ~(3 << 6);
-	LPC_GPIO0->FIODIR |= GPIO_P0_19;  // Set GPIO - P0_19 - to be output (= 1).
+	// Enable Pins (on PAD) for 7-Segment Displays
 
-	// Set P0_20 to value '00' - GPIO:  Used for DATA of 7-Segment Display.
-	// LPC_PINCON->PINSEL1	&= (~0x000000C0);
-	LPC_PINCON->PINSEL1	&= ~(3 << 8);
-	LPC_GPIO0->FIODIR |= GPIO_P0_20;  // Set GPIO - P0_20 - to be output (= 1).
-
-	// Setup P0_18 as input switch:
-	LPC_PINCON->PINSEL1	&= ~(3 << 4);
-	LPC_GPIO0->FIODIR &= ~GPIO_P0_18;  // Set GPIO - P0_18 - to be input (= 0).
-	// tempInt1 = LPC_PINCON->PINSEL1;
-	// printf("LPC_PINCON->PINSEL1 = %d\n", tempInt1);
-
-	/*
-	// Set P_24 to value '00' - GPIO:  Used for USM0 of DRV8811EVM.
-	LPC_PINCON->PINSEL3	&= ~(3 << 16);
-	LPC_GPIO1->FIODIR |= GPIO_P1_24;  // Set GPIO - P1_24 - to be output (= 1).
-	*/
-
-	// Set P_25 to value '00' - GPIO:  Used for DATA of 7-Segment Display. (BROWN)
-	LPC_PINCON->PINSEL3	&= ~(3 << 18);
-	LPC_GPIO1->FIODIR |= GPIO_P1_25;  // Set GPIO - P1_25 - to be output (= 1).
-
-	// Set P_26 to value '00' - GPIO:  Used for CLOCK of 7-Segment Display. (RED)
-	LPC_PINCON->PINSEL3	&= ~(3 << 20);
-	LPC_GPIO1->FIODIR |= GPIO_P1_26;  // Set GPIO - P1_26 - to be output (= 1).
-
-
-	// Set P_29 to value '00' - GPIO:  Used for ENABLE of 7-Segment Display. (BLACK)
-	LPC_PINCON->PINSEL3	&= ~(3 << 26);
-	LPC_GPIO1->FIODIR |= GPIO_P1_29;  // Set GPIO - P1_29 - to be output (= 1).
-#endif
-
-/* ***************************************************************** */
-
-	/*
-	 * Enable Pins (on PAD) for 7-Segment Displays
-	 */
-
-	// Set P_19 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_1
+	// Set P1_19 (PAD2) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_1
 	LPC_PINCON->PINSEL3	&= ~(3 << 6);
 	LPC_GPIO1->FIODIR |= GPIO_P1_19;  // Set GPIO - P1_19 - to be output (= 1).
 
-	// Set P_20 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_2
+	// Set P1_20 (PAD3) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_2
 	LPC_PINCON->PINSEL3	&= ~(3 << 8);
 	LPC_GPIO1->FIODIR |= GPIO_P1_20;  // Set GPIO - P1_20 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_3
+	// Set P1_21 (PAD4) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_3
 	LPC_PINCON->PINSEL3	&= ~(3 << 10);
 	LPC_GPIO1->FIODIR |= GPIO_P1_21;  // Set GPIO - P1_21 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_4
+	// Set P1_22 (PAD5) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 1_4
 	LPC_PINCON->PINSEL3	&= ~(3 << 12);
 	LPC_GPIO1->FIODIR |= GPIO_P1_22;  // Set GPIO - P1_22 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_1
+	// Set P1_23 (PAD6) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_1
 	LPC_PINCON->PINSEL3	&= ~(3 << 14);
 	LPC_GPIO1->FIODIR |= GPIO_P1_23;  // Set GPIO - P1_23 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_2
+	// Set P1_24 (PAD7) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_2
 	LPC_PINCON->PINSEL3	&= ~(3 << 16);
-	LPC_GPIO1->FIODIR |= GPIO_P1_24;  // Set GPIO - P1_25 - to be output (= 1).
+	LPC_GPIO1->FIODIR |= GPIO_P1_24;  // Set GPIO - P1_24 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_3
+	// Set P1_25 (PAD8) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_3
 	LPC_PINCON->PINSEL3	&= ~(3 << 18);
 	LPC_GPIO1->FIODIR |= GPIO_P1_25;  // Set GPIO - P1_25 - to be output (= 1).
 
-	// Set P_28 to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_4
+	// Set P1_26 (PAD9) to value '00' - GPIO; Used for ENABLE of 7-Segment Display 2_4
 	LPC_PINCON->PINSEL3	&= ~(3 << 20);
 	LPC_GPIO1->FIODIR |= GPIO_P1_26;  // Set GPIO - P1_26 - to be output (= 1).
 
-	/*
-	 * Data and clock for 7-Segment Displays
-	 */
+	// --- Data and clock for 7-Segment Displays --- //
 
-	// Set P_28 to value '00' - GPIO; Used for DATA of 7-Segment Displays
+	// Set P1_28 (PAD11) to value '00' - GPIO; Used for DATA of 7-Segment Displays
 	LPC_PINCON->PINSEL3	&= ~(3 << 24);
 	LPC_GPIO1->FIODIR |= GPIO_P1_28;  // Set GPIO - P1_28 - to be output (= 1).
 
-	// Set P_29 to value '00' - GPIO; Used for CLOCK of 7-Segment Displays
+	// Set P1_29 (PAD12) to value '00' - GPIO; Used for CLOCK of 7-Segment Displays
 	LPC_PINCON->PINSEL3	&= ~(3 << 26);
 	LPC_GPIO1->FIODIR |= GPIO_P1_29;  // Set GPIO - P1_29 - to be output (= 1).
 
 	/* ***************************************************************** */
 
 	LPC_GPIO1->FIOSET |= GPIO_P1_19;  // DISABLE the 7SegDisp.
-	LPC_GPIO1->FIOSET |= GPIO_P1_23;  // DISABLE the 7SegDisp.
 	LPC_GPIO1->FIOSET |= GPIO_P1_20;  // DISABLE the 7SegDisp.
-	LPC_GPIO1->FIOSET |= GPIO_P1_24;  // DISABLE the 7SegDisp.
 	LPC_GPIO1->FIOSET |= GPIO_P1_21;  // DISABLE the 7SegDisp.
-	LPC_GPIO1->FIOSET |= GPIO_P1_25;  // DISABLE the 7SegDisp.
 	LPC_GPIO1->FIOSET |= GPIO_P1_22;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_23;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_24;  // DISABLE the 7SegDisp.
+	LPC_GPIO1->FIOSET |= GPIO_P1_25;  // DISABLE the 7SegDisp.
 	LPC_GPIO1->FIOSET |= GPIO_P1_26;  // DISABLE the 7SegDisp.
 
 	__NOP;

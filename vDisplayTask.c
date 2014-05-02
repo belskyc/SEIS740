@@ -40,7 +40,6 @@ void vDisplayTask( void *pvParameters )
 	/* This task is also defined within an infinite loop. */
 	for( ;; )
 	{
-#if 1
 		/* As this task only runs when the sending tasks are in the Blocked state, 
 		and the sending tasks only block when the queue is full, this task should
 		always find the queue to be full.  3 is the queue length. */
@@ -75,14 +74,12 @@ void vDisplayTask( void *pvParameters )
 		{
 			/* We did not receive anything from the queue.  This must be an error 
 			as this task should only run when the queue is full. */
-			vPrintString( "Could not receive from the dispaly queue.\n" );
+			vPrintString( "Could not receive from the display queue.\n" );
 			if (xStatus == errQUEUE_EMPTY)
 			{
 				vPrintString( "The queue is empty.\n");
 			}
 		}
-#endif
 	}
-
 }
-/*------END of vReceiverTask-----------------------------------------------------*/
+/*------END of vDisplayTask-----------------------------------------------------*/

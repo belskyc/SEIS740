@@ -67,3 +67,8 @@ extern char RxIRQ_Fired;
 
 extern xQueueHandle xDisplayQueue;
 extern dispReq DisplayRequests[];
+
+extern uint8_t MUX_IR_index1;
+extern uint8_t MUX_IR_index2;
+extern uint32_t IR_LANE1_ID;
+extern uint32_t IR_LANE2_ID;

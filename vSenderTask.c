@@ -24,10 +24,7 @@
 #include "display.h"
 #include "ADXL345_init.h"
 
-extern uint8_t MUX_IR_index1;
-extern uint8_t MUX_IR_index2;
-
-#if 1
+// RESET Push-Button Task.
 void vSenderTask( void *pvParameters )
 {
 	uint8_t k = 0;
@@ -36,12 +33,11 @@ void vSenderTask( void *pvParameters )
 
     int GPIO0state = 0;
 	uint8_t buttonPressEvent = 0;
-	vPrintString( "vSederTask started\n" );
+	vPrintString( "vSenderTask started\n" );
 
 	/* As per most tasks, this task is implemented within an infinite loop. */
 	for( ;; )
 	{
-
 		// Check if the SW6-button on NGX board is pressed or not.
 		GPIO0state = LPC_GPIO0->FIOPIN;
 		if(!(GPIO0state & GPIO_P0_18)) // SW6-Button on NGX board is pressed.
@@ -55,49 +51,17 @@ void vSenderTask( void *pvParameters )
 
 		if(buttonPressEvent)
 		{
-
-	        //short_delay(300);
-
-		    // copy the timer value
-#if 0
-	        uint32_t tval = timer0_counter;
-			DisplayRequests[IR_IDX_1_1].tVal = timer0_counter;
-			vPrintString( "Button press event detected\n" );
-			vPrintStringAndNumber("Timer Value Captured = ", DisplayRequests[IR_IDX_1_1].tVal);
-
-	    	/* The first parameter is the queue to which data is being sent.  The
-		    queue was created before the scheduler was started, so before this task
-		    started to execute.
-
-		    The second parameter is the address of the structure being sent.  The
-		    address is passed in as the task parameter.
-
-		    The third parameter is the Block time - the time the task should be kept
-		    in the Blocked state to wait for space to become available on the queue
-		    should the queue already be full.  A block time is specified as the queue
-		    will become full.  Items will only be removed from the queue when both
-		    sending tasks are in the Blocked state.. */
-
-			xStatus = xQueueSendToBack(xDisplayQueue, &DisplayRequests[IR_IDX_1_1], 0);
-		    //xStatus = xQueueSendToBack( xDisplayQueue, pvParameters, xTicksToWait );
-
-		    if( xStatus != pdPASS )
-		    {
-			    /* We could not write to the queue because it was full - this must
-			    be an error as the receiving task should make space in the queue
-			    as soon as both sending tasks are in the Blocked state. */
-			    vPrintString( "Could not send to the queue.\n" );
-		    }
-#endif
-
 		    vPrintString( "Button press event detected\n" );
-		    buttonPressEvent = 0;
+		    buttonPressEvent = 0; // Clear the button event.
+
+		    // Reset the IR-sensor indexes.
+		    IR_LANE1_ID = IR_ID_1_1;
+		    IR_LANE2_ID = IR_ID_2_1;
+
+		    // Reset the MUX indexes & addresses.
 		    MUX_IR_index2 = 0;
 		    MUX_IR_index1 = 0;
-		    LPC_GPIO2->FIOCLR0 |= (0x0f);
-		    timer0_reference = timer0_counter;
-		    k = readADXL345(REG_INT_SOURCE);
-			// printf("EINT1: REG_INT_SOURCE = %x\n", k);
+		    LPC_GPIO2->FIOCLR0 |= (0x0f); // Reset the MUX address
 
 		    // Clear the displays
 		    Display_displayNumber(11, 100000000, 0, 0);
@@ -109,11 +73,14 @@ void vSenderTask( void *pvParameters )
 		    Display_displayNumber(23, 100000000, 0, 0);
 		    Display_displayNumber(24, 100000000, 0, 0);
 
+		    timer0_reference = timer0_counter; // Update the timer reference value.
+
+		    k = readADXL345(REG_INT_SOURCE); // Clear the ADXL345 interrupt.
+			// printf("EINT1: REG_INT_SOURCE = %x\n", k);
 		}
 
 		/* Allow the other sender task to execute. */
-		taskYIELD();
+		// taskYIELD();
 	}
 }
 /*-----------------------------------------------------------*/
-#endif

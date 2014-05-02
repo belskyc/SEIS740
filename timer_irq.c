@@ -14,14 +14,10 @@
 #include "leds.h"
 #include "timer.h"
 #include "irSensors.h"
-//#include "SevenSegmentDecode.h"
 
-//extern int Angle;
 extern int ControllerSt;
 extern int ControlCounter;
 extern int NVIC_TIMER1_IRQ_State;
-//extern char s[10];
-
 extern xQueueHandle xDisplayQueue;
 
 // TIMER0 handles the LED2 indication.

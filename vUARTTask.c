@@ -27,14 +27,24 @@
 
 extern xQueueHandle xUARTQueue;
 
+/*
 const char * const LANE1_1_LABEL = "Lane 1 Sensor 1: ";
 const char * const LANE1_2_LABEL = "Lane 1 Sensor 2: ";
 const char * const LANE1_3_LABEL = "Lane 1 Sensor 3: ";
-const char * const LANE1_4_LABEL = "Lane 1 Sensor 1: ";
+const char * const LANE1_4_LABEL = "Lane 1 Sensor 4: ";
 const char * const LANE2_1_LABEL = "Lane 2 Sensor 1: ";
 const char * const LANE2_2_LABEL = "Lane 2 Sensor 2: ";
 const char * const LANE2_3_LABEL = "Lane 2 Sensor 3: ";
 const char * const LANE2_4_LABEL = "Lane 2 Sensor 4: ";
+*/
+char * LANE1_1_LABEL = "Lane 1 Sensor 1: ";
+char * LANE1_2_LABEL = "Lane 1 Sensor 2: ";
+char * LANE1_3_LABEL = "Lane 1 Sensor 3: ";
+char * LANE1_4_LABEL = "Lane 1 Sensor 4: ";
+char * LANE2_1_LABEL = "Lane 2 Sensor 1: ";
+char * LANE2_2_LABEL = "Lane 2 Sensor 2: ";
+char * LANE2_3_LABEL = "Lane 2 Sensor 3: ";
+char * LANE2_4_LABEL = "Lane 2 Sensor 4: ";
 
 void vUARTTask( void *pvParameters )
 {
@@ -51,9 +61,10 @@ void vUARTTask( void *pvParameters )
 	for( ;; )
 	{
 		/* Print out the name of this task. */
-		vPrintString( pcTaskName );
+		// vPrintString( pcTaskName );
+		// vPrintString("vUARTTask checking queue.\n");
 
-		vPrintString("vUARTTask checking queue");
+		// Get UART item off of the Queue.
 		xStatus = xQueueReceive( xUARTQueue, &xReceivedRequest, portMAX_DELAY );
 
 		if( xStatus == pdPASS )
@@ -65,22 +76,22 @@ void vUARTTask( void *pvParameters )
 					UART3_PrintString(LANE1_1_LABEL);
 					break;
 				case DISP_2_1:
-					UART3_PrintString(LANE1_2_LABEL);
-					break;
-				case DISP_1_2:
-					UART3_PrintString(LANE1_3_LABEL);
-					break;
-				case DISP_2_2:
-					UART3_PrintString(LANE1_4_LABEL);
-					break;
-				case DISP_1_3:
 					UART3_PrintString(LANE2_1_LABEL);
 					break;
-				case DISP_2_3:
+				case DISP_1_2:
+					UART3_PrintString(LANE1_2_LABEL);
+					break;
+				case DISP_2_2:
 					UART3_PrintString(LANE2_2_LABEL);
 					break;
-				case DISP_1_4:
+				case DISP_1_3:
+					UART3_PrintString(LANE1_3_LABEL);
+					break;
+				case DISP_2_3:
 					UART3_PrintString(LANE2_3_LABEL);
+					break;
+				case DISP_1_4:
+					UART3_PrintString(LANE1_4_LABEL);
 					break;
 				case DISP_2_4:
 					UART3_PrintString(LANE2_4_LABEL);
@@ -102,36 +113,6 @@ void vUARTTask( void *pvParameters )
 				vPrintString( "The queue is empty.\n");
 			}
 		}
-
-#if 0
-		/* Use the semaphore to wait for the event.  The semaphore was created
-		before the scheduler was started so before this task ran for the first
-		time.  The task blocks indefinitely meaning this function call will only
-		return once the semaphore has been successfully obtained - so there is no
-		need to check the returned value. */
-		xSemaphoreTake( xUARTCountSemaphore, portMAX_DELAY );
-
-
-		if(RxIRQ_Fired)
-		{
-			// Process UART3
-			command = RxBuf[0];
-			printf("RxBuf[0] = 0x%x \n", RxBuf[0]);
-			printf("RxBuf[1] = 0x%x \n", RxBuf[1]);
-			printf("command = 0x%x \n", command);
-			switch (command)
-			{
-			case 'C':
-				printf("Understood the command = %x\r", command);
-				break;
-			default:
-				printf("Did NOT understand the command = %x\r", command);
-				break;
-			}
-			UART3_PrintString ("UART3 waiting.  Input next CHAR command = ");  // Send string over UART3.
-			RxIRQ_Fired = 0; // Clear Flag.
-		}
-#endif
 	}
 }
 /*---------END of UART Task--------------------------------------------------*/

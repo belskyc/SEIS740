@@ -42,13 +42,6 @@ char RxIRQ_Fired;
 // Function to set up UART3
 void UART3_Init(int baudrate)
 {
-	/* OLD:
-	int pclk;
-	unsigned long int Fdiv;
-	// PCLK_UART3 is being set to 1/4 of SystemCoreClock
-	pclk = SystemCoreClock / 4;
-	*/
-
 	// Assumes CCLK = 12MHz
 
 	// Turn on power to UART3
@@ -67,11 +60,7 @@ void UART3_Init(int baudrate)
 	LPC_PINCON->PINMODE0 |= (1 << 3);
 
 	LPC_UART3->LCR = 0x83;		// 8 bits, 1 Stop bit, no Parity, DLAB=1
-    /* OLD:
-	Fdiv = ( pclk / 16 ) / baudrate ;	// Set baud rate
-    LPC_UART3->DLM = Fdiv / 256;
-    LPC_UART3->DLL = Fdiv % 256;
-    */
+
 	// Calculated to get 57600 by flowchart on p.314 of LPC17xx User Guide.
 	// !!Important!!: If the fractional divider is active (DIVADDVAL > 0) and DLM = 0,
 	//  the value of the DLL register must be GREATER THAN 2.
@@ -97,10 +86,8 @@ void UART3_Sendchar(char c)
 
 // *******************************************************************//
 // Function to get character from UART3
-// char UART3_Getchar()
 uint8_t UART3_Getchar()
 {
-	// char c;
 	uint8_t c;
 	while((LPC_UART3->LSR & LSR_RDR) == 0);  // Nothing received so just block
 	UART3_IIR = LPC_UART3->IIR;  // Clear IIR
@@ -129,8 +116,8 @@ void UART3_IRQHandler(void)
 	// Assumes two bytes in the Rx buffer.
 	RxBuf[0] = UART3_Getchar();
 	// RxBuf[1] = UART3_Getchar();
-	//RxBuf[0] = LPC_UART3->RBR;
-	//RxBuf[1] = LPC_UART3->RBR;
+	// RxBuf[0] = LPC_UART3->RBR;
+	// RxBuf[1] = LPC_UART3->RBR;
 	RxIRQ_Fired = 1; // Set Flag.
 
 	// Give the semaphore

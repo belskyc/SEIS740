@@ -1,6 +1,6 @@
 /*
  * SEIS-740, Spring 2014, Real-Time-Systems
- * Class Project
+ * Pinewood Durby Track Class Project
  * Chris Belsky & Jeff Hatch *
 */
 
@@ -28,7 +28,6 @@
 #include "uart.h"
 #include "vTasks.h"
 #include "leds.h"
-
 
 #define mainSENDER_1		1
 #define mainSENDER_2		2
@@ -66,43 +65,25 @@ that is accessed by IR sensor interrupt handlers and the Display task */
 xQueueHandle xDisplayQueue;
 
 /* Declare a queue for handling the UART output from the EINT handlers to the
- * UART task
- */
+ * UART task */
 xQueueHandle xUARTQueue;
 
 /* Array of display requests for each IR handler.  This is used to
  * pass from the IR sensor interrupt handler into the queue and then
- * is pulled off of the queue in the receiver task
- */
+ * is pulled off of the queue in the receiver task. */
 dispReq DisplayRequests[] =
 {
-		{ 11, 0 },
-		{ 12, 0 },
-		{ 13, 0 },
-		{ 14, 0 },
-		{ 21, 0 },
-		{ 22, 0 },
-		{ 23, 0 },
-		{ 24, 0 },
+	{ 11, 0 },
+	{ 12, 0 },
+	{ 13, 0 },
+	{ 14, 0 },
+	{ 21, 0 },
+	{ 22, 0 },
+	{ 23, 0 },
+	{ 24, 0 },
 };
 
 /*-----------------------------------------------------------*/
-
-#if 0
-/* Define the structure type that will be passed on the queue. */
-typedef struct
-{
-	unsigned char ucValue;
-	unsigned char ucSource;
-} xData;
-
-/* Declare two variables of type xData that will be passed on the queue. */
-static const xData xStructsToSend[ 2 ] =
-{
-	{ 100, mainSENDER_1 }, /* Used by Sender1. */
-	{ 200, mainSENDER_2 }  /* Used by Sender2. */
-};
-#endif
 
 // Function to initialize the clock & external clock output pin.
 void clkcfg_init (void)
@@ -165,7 +146,7 @@ int main( void )
 
     /* The queue is created to hold a maximum of 8 structures of type xDisplayQueue. */
 	printf("sizeof(dispReq) = %d\n", sizeof(dispReq));
-	xDisplayQueue = xQueueCreate( 16, sizeof( dispReq ) );
+	xDisplayQueue = xQueueCreate(8, sizeof(dispReq));
 	xUARTQueue = xQueueCreate(8, sizeof(dispReq));
 
 	timer0_counter = 0; // Timer to compare against reference for display values
@@ -180,12 +161,12 @@ int main( void )
 	RxIRQ_Fired = 0;
 	UART3_Init(57600); // Setup UART3 to 57600 baud
 	UART3_PrintString ("SEIS-740 Project:\r");  // Send string over UART3.
-	UART3_PrintString ("UART3 waiting.  Input 1st CHAR command = ");  // Send string over UART3.
+	// UART3_PrintString ("UART3 waiting.  Input 1st CHAR command = ");  // Send string over UART3.
 
 	/* Before a semaphore is used it must be explicitly created.  In this example
 	a counting semaphore is created.  The semaphore is created to have a maximum
 	count value of 10, and an initial count value of 0. */
-	xCountingSemaphore = xSemaphoreCreateCounting( 10, 0 );
+	xCountingSemaphore = xSemaphoreCreateCounting( 10, 0 ); // Used for ADXL345 Value Readings
 	/* Check the semaphore was created successfully. */
 	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xCountingSemaphore!\n"); }
 
@@ -193,11 +174,10 @@ int main( void )
 	/* Check the semaphore was created successfully. */
 	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xUARTCountSemaphore!\n"); }
 
-	vSemaphoreCreateBinary(xADXLActiveSemaphore);
+	vSemaphoreCreateBinary(xADXLActiveSemaphore); // Used for ADXL345 Activity Event
 	/* Check the semaphore was created successfully. */
 	if( xCountingSemaphore == NULL ) { printf("FAILED: could not create xADXLActiveSemaphore!\n"); }
 
-#if 1
 	if( xDisplayQueue != NULL )
 	{
 		/* Create two instances of the task that will write to the queue.  The
@@ -225,7 +205,7 @@ int main( void )
 #endif
 
 		/* Create the UART task */
-		//xTaskCreate( vUARTTask, "UART Task", 512, NULL, 2, NULL );
+		xTaskCreate( vUARTTask, "UART Task", 512, NULL, 2, NULL );
 
 #if 0
 		/* Create the ADXL345 "Active" interrupt task */
@@ -247,7 +227,7 @@ int main( void )
 		NVIC_ClearPendingIRQ( EINT3_IRQn );
 		LPC_SC->EXTINT |= 0x08;
 		// Only enable the external interrupts after HW has been configured.
-//		NVIC_EnableIRQ( EINT0_IRQn );
+		// NVIC_EnableIRQ( EINT0_IRQn );
 		NVIC_EnableIRQ( EINT1_IRQn );
 		NVIC_EnableIRQ( EINT2_IRQn );
 	    NVIC_EnableIRQ( EINT3_IRQn );
@@ -260,8 +240,6 @@ int main( void )
 		/* The queue could not be created. */
 		vPrintString( "Could NOT create the display queue.\n" );
 	}
-
-#endif
 
     /* If all is well we will never reach here as the scheduler will now be
     running the tasks.  If we do reach here then it is likely that there was
